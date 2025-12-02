@@ -12,21 +12,28 @@
   const videos = ref([])
   const loading = ref(true)
   const error = ref(null)
-  const sortBy = ref('name')
+  const sortBy = ref('default') // default, date_asc, date_desc, title_asc, title_desc
 
   const totalDuration = computed(() => {
     return videos.value.reduce((acc, v) => acc + (v.duration || 0), 0)
   })
 
   const sortedVideos = computed(() => {
-    return [...videos.value].sort((a, b) => {
-      if (sortBy.value === 'name') {
-        return a.title.localeCompare(b.title)
-      } else {
-        // Date format YYYYMMDD
-        return (b.upload_date || '').localeCompare(a.upload_date || '')
-      }
-    })
+    let sorted = [...videos.value]
+    
+    switch (sortBy.value) {
+      case 'title_asc':
+        return sorted.sort((a, b) => a.title.localeCompare(b.title))
+      case 'title_desc':
+        return sorted.sort((a, b) => b.title.localeCompare(a.title))
+      case 'date_asc':
+        return sorted.sort((a, b) => (a.upload_date || '').localeCompare(b.upload_date || ''))
+      case 'date_desc':
+        return sorted.sort((a, b) => (b.upload_date || '').localeCompare(a.upload_date || ''))
+      case 'default':
+      default:
+        return sorted // Original order from backend
+    }
   })
 
   onMounted(async () => {
@@ -75,15 +82,16 @@
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-900 p-8">
-    <div class="max-w-7xl mx-auto">
-      <!-- Header -->
-      <div class="mb-8 flex items-center gap-4">
+  <div class="min-h-screen bg-gray-900">
+    <!-- Fixed Header -->
+    <div class="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 shadow-md">
+      <div class="max-w-7xl mx-auto px-8 py-4 flex items-center gap-4">
         <button
           @click="goBack"
-          class="p-2 rounded-full hover:bg-gray-700 transition-colors">
+          class="p-2 rounded-full hover:bg-gray-700 transition-colors group"
+          :title="'Back to ' + (dir || 'Home')">
           <svg
-            class="w-6 h-6 text-gray-600"
+            class="w-6 h-6 text-gray-400 group-hover:text-white transition-colors"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24">
@@ -94,9 +102,14 @@
               d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
         </button>
-        <h1 class="text-2xl font-bold text-white truncate">{{ name }}</h1>
+        <div class="flex flex-col">
+          <h1 class="text-xl font-bold text-white truncate">{{ name }}</h1>
+          <span class="text-xs text-gray-500 font-mono">{{ dir || '/' }}</span>
+        </div>
       </div>
+    </div>
 
+    <div class="max-w-7xl mx-auto p-8 pt-6">
       <div
         v-if="loading"
         class="text-center py-12">
@@ -112,25 +125,10 @@
       <div
         v-else
         class="flex flex-col lg:flex-row gap-8">
-        <!-- Sidebar / Info (Optional, using as cover placeholder or just layout) -->
-        <!-- For now, we list videos directly as per requirements: "left cover, right list" - wait, requirements said:
-             "block divided into two parts: left playlist cover, right list of videos"
-        -->
-
-        <!-- Layout adjustment based on requirements -->
+        
+        <!-- Sidebar -->
         <div class="lg:w-1/4">
-          <div class="bg-gray-800 rounded-xl shadow-sm p-4 sticky top-8">
-            <!-- We don't have playlist cover explicitly in the API response for details,
-                 but we could pass it or fetch it.
-                 Actually, the API /playlist/:name returns list of videos.
-                 The cover was available in the list view.
-                 We might need to fetch playlist info again or just show the first video thumbnail as cover if missing.
-                 Let's assume we just show a placeholder or try to find a cover from the videos if needed,
-                 but strictly the requirement says "playlist cover".
-                 Since we don't have a separate endpoint for playlist metadata (only list of videos),
-                 we can try to guess or just skip if not critical.
-                 However, let's try to use the first video's thumbnail or a generic icon.
-            -->
+          <div class="bg-gray-800 rounded-xl shadow-sm p-4 sticky top-24">
             <div class="aspect-video bg-gray-700 rounded-lg overflow-hidden mb-4">
               <img
                 v-if="videos.length > 0 && videos[0].thumbnail"
@@ -152,18 +150,28 @@
                 </svg>
               </div>
             </div>
-            <h2 class="font-bold text-lg mb-2">{{ name }}</h2>
+            <h2 class="font-bold text-lg mb-2 text-white">{{ name }}</h2>
             <p class="text-gray-400">{{ videos.length }} videos</p>
             <p class="text-gray-400 text-sm">{{ formatDuration(totalDuration) }}</p>
 
             <div class="mt-6">
               <label class="block text-sm font-medium text-gray-300 mb-2">Sort by</label>
-              <select
-                v-model="sortBy"
-                class="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                <option value="name">Name</option>
-                <option value="date">Date</option>
-              </select>
+              <div class="relative">
+                <select
+                  v-model="sortBy"
+                  class="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 appearance-none py-2 pl-3 pr-10">
+                  <option value="default">Default (Position)</option>
+                  <option value="date_desc">Date (Newest first)</option>
+                  <option value="date_asc">Date (Oldest first)</option>
+                  <option value="title_asc">Title (A-Z)</option>
+                  <option value="title_desc">Title (Z-A)</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -172,16 +180,22 @@
         <div class="lg:w-3/4">
           <div class="space-y-4">
             <div
-              v-for="video in sortedVideos"
+              v-for="(video, index) in sortedVideos"
               :key="video.filename"
-              class="bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden flex cursor-pointer group"
+              class="bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex cursor-pointer group border border-transparent hover:border-gray-700"
               @click="openVideo(video)">
+              
+              <!-- Numbering -->
+              <div class="w-12 flex-shrink-0 flex items-center justify-center text-gray-500 font-mono text-lg font-bold bg-gray-800/50 border-r border-gray-700">
+                {{ index + 1 }}
+              </div>
+
               <!-- Thumbnail -->
-              <div class="w-48 flex-shrink-0 bg-gray-700 relative">
+              <div class="w-48 flex-shrink-0 bg-gray-700 relative overflow-hidden">
                 <img
                   v-if="video.thumbnail"
                   :src="api.getFileUrl(video.thumbnail)"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div
                   v-else
                   class="w-full h-full flex items-center justify-center text-gray-400">
@@ -202,21 +216,25 @@
                       d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <div class="absolute bottom-1 right-1 bg-black bg-opacity-75 text-white text-xs px-1 rounded">
+                <div class="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-mono">
                   {{ formatDuration(video.duration) }}
                 </div>
               </div>
 
               <!-- Info -->
-              <div class="p-4 flex-grow">
-                <h3 class="font-semibold text-white mb-1 group-hover:text-blue-400 transition-colors">
+              <div class="p-4 flex-grow flex flex-col justify-center">
+                <h3 class="font-semibold text-white text-lg mb-1 group-hover:text-blue-400 transition-colors line-clamp-2">
                   {{ video.title }}
                 </h3>
-                <div class="text-sm text-gray-400 mb-2">
-                  {{ video.uploader }}
-                </div>
-                <div class="text-xs text-gray-400">
-                  {{ formatDate(video.upload_date) }}
+                <div class="flex items-center gap-3 text-sm text-gray-400">
+                  <span v-if="video.uploader" class="flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    {{ video.uploader }}
+                  </span>
+                  <span v-if="video.upload_date" class="flex items-center gap-1">
+                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    {{ formatDate(video.upload_date) }}
+                  </span>
                 </div>
               </div>
             </div>
