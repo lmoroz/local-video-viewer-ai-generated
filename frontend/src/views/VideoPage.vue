@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, onMounted, onUnmounted, computed } from 'vue'
+  import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import videojs from 'video.js'
   import 'video.js/dist/video-js.css'
@@ -15,15 +15,28 @@
   const videoPlayer = ref(null)
   const player = ref(null)
   const videoData = ref(null)
+  
+  // Player State
+  const isPlaying = ref(false)
+  const currentTime = ref(0)
+  const duration = ref(0)
+  const volume = ref(1)
+  const isFullscreen = ref(false)
+  const showControls = ref(false)
+  let controlsTimeout = null
 
   const chapters = computed(() => videoData.value?.chapters || [])
+  
+  const currentChapterName = computed(() => {
+    if (!chapters.value.length) return ''
+    // Find the chapter that matches current time
+    // Chapters are usually sorted by start_time
+    // We find the last chapter where start_time <= currentTime
+    const current = [...chapters.value].reverse().find(c => c.start_time <= currentTime.value)
+    return current ? current.title : ''
+  })
 
   onMounted(async () => {
-    // Fetch video details again to get full metadata including chapters/description
-    // Since our API structure is a bit flat (getPlaylistDetails returns all videos),
-    // we might need to fetch the playlist and find this video.
-    // Ideally we should have a single video endpoint, but we can reuse getPlaylistDetails.
-
     try {
       const response = await api.getPlaylistDetails(props.playlist, props.dir)
       const found = response.data.find(v => v.filename === props.filename)
@@ -42,11 +55,12 @@
     const src = api.getFileUrl(data.path)
 
     player.value = videojs(videoPlayer.value, {
-      fluid: true, // Responsive
+      fluid: true,
+      controls: false, // Hide default controls
       sources: [
         {
           src: src,
-          type: 'video/mp4' // Or detect type
+          type: 'video/mp4'
         }
       ]
     })
@@ -54,13 +68,58 @@
     // Restore volume
     const savedVolume = localStorage.getItem('video-volume')
     if (savedVolume !== null) {
-      player.value.volume(parseFloat(savedVolume))
+      const vol = parseFloat(savedVolume)
+      player.value.volume(vol)
+      volume.value = vol
+    } else {
+      volume.value = player.value.volume()
     }
 
-    // Save volume on change
+    // Event Listeners
+    player.value.on('play', () => isPlaying.value = true)
+    player.value.on('pause', () => isPlaying.value = false)
+    player.value.on('timeupdate', () => currentTime.value = player.value.currentTime())
+    player.value.on('durationchange', () => duration.value = player.value.duration())
     player.value.on('volumechange', () => {
-      localStorage.setItem('video-volume', player.value.volume())
+      const vol = player.value.volume()
+      volume.value = vol
+      localStorage.setItem('video-volume', vol)
     })
+    player.value.on('fullscreenchange', () => isFullscreen.value = player.value.isFullscreen())
+  }
+
+  const togglePlay = () => {
+    if (player.value) {
+      if (player.value.paused()) {
+        player.value.play()
+      } else {
+        player.value.pause()
+      }
+    }
+  }
+
+  const toggleFullscreen = () => {
+    if (player.value) {
+      if (player.value.isFullscreen()) {
+        player.value.exitFullscreen()
+      } else {
+        player.value.requestFullscreen()
+      }
+    }
+  }
+
+  const onVolumeChange = (e) => {
+    const val = parseFloat(e.target.value)
+    if (player.value) {
+      player.value.volume(val)
+    }
+  }
+
+  const onSeek = (e) => {
+    const val = parseFloat(e.target.value)
+    if (player.value) {
+      player.value.currentTime(val)
+    }
   }
 
   const seekTo = time => {
@@ -68,6 +127,16 @@
       player.value.currentTime(time)
       player.value.play()
     }
+  }
+
+  const handleMouseMove = () => {
+    showControls.value = true
+    if (controlsTimeout) clearTimeout(controlsTimeout)
+    controlsTimeout = setTimeout(() => {
+      if (isPlaying.value) {
+        showControls.value = false
+      }
+    }, 3000)
   }
 
   const goBack = () => {
@@ -80,8 +149,13 @@
 
   const formatTime = seconds => {
     if (!seconds && seconds !== 0) return '0:00'
-    const m = Math.floor(seconds / 60)
+    const h = Math.floor(seconds / 3600)
+    const m = Math.floor((seconds % 3600) / 60)
     const s = Math.floor(seconds % 60)
+    
+    if (h > 0) {
+      return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+    }
     return `${m}:${s.toString().padStart(2, '0')}`
   }
 
@@ -97,6 +171,7 @@
     if (player.value) {
       player.value.dispose()
     }
+    if (controlsTimeout) clearTimeout(controlsTimeout)
   })
 </script>
 
@@ -125,13 +200,76 @@
 
     <div class="flex flex-col lg:flex-row h-[calc(100vh-64px)]">
       <!-- Player Section -->
-      <div class="flex-grow bg-black flex flex-col relative">
+      <div 
+        class="flex-grow bg-black flex flex-col relative group"
+        @mousemove="handleMouseMove"
+        @mouseleave="showControls = false">
         <div class="flex-grow relative">
           <video
             ref="videoPlayer"
             class="video-js vjs-big-play-centered w-full h-full"
-            controls
-            preload="auto" />
+            preload="auto"
+            @click="togglePlay" />
+            
+          <!-- Custom Controls Overlay -->
+          <div 
+            class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent px-4 py-4 transition-opacity duration-300 flex flex-col gap-2"
+            :class="{ 'opacity-0': !showControls && isPlaying, 'opacity-100': showControls || !isPlaying }">
+            
+            <!-- Progress Bar -->
+            <input
+              type="range"
+              min="0"
+              :max="duration"
+              :value="currentTime"
+              @input="onSeek"
+              class="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:h-2 transition-all" />
+
+            <div class="flex items-center justify-between">
+              <!-- Left Controls -->
+              <div class="flex items-center gap-4">
+                <!-- Play/Pause -->
+                <button @click="togglePlay" class="hover:text-blue-400 transition-colors">
+                  <svg v-if="!isPlaying" class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                  <svg v-else class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
+
+                <!-- Volume -->
+                <div class="flex items-center gap-2 group/vol">
+                  <button @click="volume === 0 ? player.volume(1) : player.volume(0)" class="hover:text-blue-400 transition-colors">
+                    <svg v-if="volume === 0" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" /></svg>
+                    <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                  </button>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    :value="volume"
+                    @input="onVolumeChange"
+                    class="w-0 overflow-hidden group-hover/vol:w-24 transition-all duration-300 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                </div>
+
+                <!-- Time -->
+                <div class="text-sm font-mono text-gray-300">
+                  {{ formatTime(currentTime) }} / {{ formatTime(duration) }}
+                </div>
+
+                <!-- Chapter Name -->
+                <div v-if="currentChapterName" class="text-sm text-gray-400 border-l border-gray-600 pl-4 truncate max-w-[200px]">
+                  {{ currentChapterName }}
+                </div>
+              </div>
+
+              <!-- Right Controls -->
+              <div class="flex items-center gap-4">
+                <button @click="toggleFullscreen" class="hover:text-blue-400 transition-colors">
+                  <svg v-if="!isFullscreen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                  <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v4h4m-4-4l5 5m11-5l-5 5m5-5v4h-4M4 8V4h4M4 8l5-5M16 4h4v4m-4-4l5 5"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Info Section (Below player) -->
@@ -157,6 +295,7 @@
             v-for="(chapter, index) in chapters"
             :key="index"
             class="p-3 hover:bg-gray-700 cursor-pointer flex gap-3 text-sm transition-colors border-b border-gray-700/50 last:border-0"
+            :class="{ 'bg-gray-700/50': currentChapterName === chapter.title }"
             @click="seekTo(chapter.start_time)">
             <span class="font-mono text-blue-400">{{ formatTime(chapter.start_time) }}</span>
             <span class="truncate">{{ chapter.title }}</span>
@@ -172,5 +311,12 @@
   .video-js {
     width: 100%;
     height: 100%;
+  }
+  .video-js .vjs-tech {
+    object-fit: contain;
+  }
+  /* Hide default big play button since we have our own or click-to-play */
+  .video-js .vjs-big-play-button {
+    display: none;
   }
 </style>
