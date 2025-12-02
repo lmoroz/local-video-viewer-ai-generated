@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, computed, onMounted } from 'vue'
+  import { ref, computed, onMounted, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import api from '../api'
 
@@ -13,6 +13,24 @@
   const loading = ref(true)
   const error = ref(null)
   const sortBy = ref('default') // default, date_asc, date_desc, title_asc, title_desc
+
+  // Load sort order
+  watch(() => props.name, (newName) => {
+    if (!newName) return
+    const saved = localStorage.getItem(`playlist-sort-${newName}`)
+    if (saved) {
+      sortBy.value = saved
+    } else {
+      sortBy.value = 'default'
+    }
+  }, { immediate: true })
+
+  // Save sort order
+  watch(sortBy, (newValue) => {
+    if (props.name) {
+      localStorage.setItem(`playlist-sort-${props.name}`, newValue)
+    }
+  })
 
   const totalDuration = computed(() => {
     return videos.value.reduce((acc, v) => acc + (v.duration || 0), 0)
@@ -39,7 +57,7 @@
   onMounted(async () => {
     try {
       const response = await api.getPlaylistDetails(props.name, props.dir)
-      videos.value = response.data
+      videos.value = response.data.map((v, i) => ({ ...v, originalIndex: i }))
     } catch (err) {
       console.error(err)
       error.value = 'Failed to load videos'
@@ -187,7 +205,7 @@
               
               <!-- Numbering -->
               <div class="w-12 flex-shrink-0 flex items-center justify-center text-gray-500 font-mono text-lg font-bold bg-gray-800/50 border-r border-gray-700">
-                {{ index + 1 }}
+                {{ video.originalIndex + 1 }}
               </div>
 
               <!-- Thumbnail -->
