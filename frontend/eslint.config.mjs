@@ -1,12 +1,11 @@
 import pluginVue from 'eslint-plugin-vue'
-import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
-import pluginVitest from '@vitest/eslint-plugin'
 import skipFormatting from '@vue/eslint-config-prettier/skip-formatting'
+import { defineConfigWithVueTs } from '@vue/eslint-config-typescript'
 
 export default defineConfigWithVueTs([
   {
     name: 'app/files-to-lint',
-    files: ['**/*.{ts,mts,tsx,vue}']
+    files: ['**/*.{js,mjs,jsx,vue}']
   },
 
   {
@@ -15,13 +14,6 @@ export default defineConfigWithVueTs([
   },
 
   pluginVue.configs['flat/essential'],
-
-  vueTsConfigs.recommended,
-
-  {
-    ...pluginVitest.configs.recommended,
-    files: ['src/**/__tests__/*']
-  },
 
   skipFormatting,
 
@@ -46,13 +38,6 @@ export default defineConfigWithVueTs([
             normal: 'always',
             component: 'always'
           }
-        }
-      ],
-      'vue/max-attributes-per-line': [
-        'error',
-        {
-          singleline: 1,
-          multiline: 1
         }
       ],
       'vue/padding-line-between-blocks': ['error', 'always'],
