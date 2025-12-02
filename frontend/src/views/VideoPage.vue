@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+  import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
   import { useRouter } from 'vue-router'
   import videojs from 'video.js'
   import 'video.js/dist/video-js.css'
@@ -15,6 +15,7 @@
   const videoPlayer = ref(null)
   const player = ref(null)
   const videoData = ref(null)
+  const chaptersVisible = ref(true)
 
   // Player State
   const isPlaying = ref(false)
@@ -42,7 +43,9 @@
       const found = response.data.find(v => v.filename === props.filename)
       if (found) {
         videoData.value = found
-        initPlayer(found)
+        nextTick(() => {
+          initPlayer(videoData.value)
+        })
       }
     } catch (err) {
       console.error('Failed to load video data', err)
@@ -55,7 +58,7 @@
     const src = api.getFileUrl(data.path)
 
     player.value = videojs(videoPlayer.value, {
-      fluid: true,
+      fluid: false,
       controls: false, // Hide default controls
       sources: [
         {
@@ -195,7 +198,7 @@
 <template>
   <div class="min-h-screen bg-gray-900 text-white">
     <!-- Header -->
-    <div class="sticky top-0 z-20 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 p-4 flex items-center gap-4 shadow-md">
+    <div class="sticky top-0 z-20 p-4 flex items-center gap-4 shadow-md">
       <button
         @click="goBack"
         class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors text-gray-300 hover:text-white group">
@@ -215,90 +218,151 @@
       <h1 class="text-lg font-semibold truncate text-gray-100">{{ videoData?.title || filename }}</h1>
     </div>
 
-    <div class="flex flex-col lg:flex-row h-[calc(100vh-64px)]">
-      <!-- Player Section -->
-      <div
-        class="flex-grow bg-black flex flex-col relative group"
-        @mousemove="handleMouseMove"
-        @mouseleave="showControls = false">
-        <div class="flex-grow relative">
-          <video
-            ref="videoPlayer"
-            class="video-js vjs-big-play-centered w-full h-full"
-            preload="auto"
-            @click="togglePlay" />
+    <div class="flex flex-col lg:flex-row overflow-hidden gap-9 px-7">
+      <!-- Left Column: Video + Info (Scrollable) -->
+      <div class="flex-1 bg-black custom-scrollbar">
+        <!-- Player Section -->
+        <div
+          class="chapters relative group aspect-video w-full rounded-lg overflow-hidden"
+          @mousemove="handleMouseMove"
+          @mouseleave="showControls = false">
+          <div class="absolute inset-0 rounded-lg">
+            <video
+              v-if="videoData"
+              ref="videoPlayer"
+              class="video-js h-full rounded-lg"
+              :poster="api.getFileUrl(videoData.thumbnail)"
+              preload="auto"
+              @click="togglePlay" />
 
-          <!-- Custom Controls Overlay -->
-          <div
-            class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent px-4 py-4 transition-opacity duration-300 flex flex-col gap-2"
-            :class="{ 'opacity-0': !showControls && isPlaying, 'opacity-100': showControls || !isPlaying }">
-            <!-- Custom Progress Bar -->
+            <!-- Custom Controls Overlay -->
             <div
-              class="relative h-1 hover:h-2 transition-all bg-gray-600 rounded cursor-pointer group/progress mb-2"
-              @click="onCustomSeek"
-              @mousemove="onProgressHover"
-              @mouseleave="hoverTime = null">
-              <!-- Progress -->
+              class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent px-4 py-4 transition-opacity duration-300 flex flex-col gap-2"
+              :class="{ 'opacity-0': !showControls && isPlaying, 'opacity-100': showControls || !isPlaying }">
+              <!-- Custom Progress Bar -->
               <div
-                class="absolute top-0 left-0 bottom-0 bg-red-500 rounded transition-all"
-                :style="{ width: (currentTime / duration) * 100 + '%' }">
+                class="relative h-1 hover:h-2 transition-all bg-gray-600 rounded cursor-pointer group/progress mb-2"
+                @click="onCustomSeek"
+                @mousemove="onProgressHover"
+                @mouseleave="hoverTime = null">
+                <!-- Progress -->
                 <div
-                  class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full scale-0 group-hover/progress:scale-150 transition-transform shadow" />
-              </div>
+                  class="absolute top-0 left-0 bottom-0 bg-red-800 rounded transition-all"
+                  :style="{ width: (currentTime / duration) * 100 + '%' }">
+                  <div
+                    class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full scale-0 group-hover/progress:scale-100 transition-transform shadow" />
+                </div>
 
-              <!-- Chapter Markers -->
-              <template v-for="(chapter, index) in chapters">
-                <div
-                  :key="index"
-                  class="absolute top-0 bottom-0 w-0.5 bg-white z-10 pointer-events-none"
-                  :style="{ left: (chapter.start_time / duration) * 100 + '%' }"
-                  v-if="chapter.start_time > 0" />
-              </template>
+                <!-- Chapter Markers -->
+                <template v-for="(chapter, index) in chapters">
+                  <div
+                    :key="index"
+                    class="absolute top-0 bottom-0 w-0.5 bg-white z-10 pointer-events-none"
+                    :style="{ left: (chapter.start_time / duration) * 100 + '%' }"
+                    v-if="chapter.start_time > 0" />
+                </template>
 
-              <!-- Hover Tooltip -->
-              <div
-                v-if="hoverTime !== null"
-                class="absolute bottom-full mb-2 -translate-x-1/2 bg-black/90 text-white text-s px-2 py-1 rounded whitespace-nowrap pointer-events-none z-20"
-                :style="{ left: hoverPosition + '%' }">
-                <div class="font-mono">{{ formatTime(hoverTime) }}</div>
+                <!-- Hover Tooltip -->
                 <div
-                  v-if="getChapterAtTime(hoverTime)"
-                  class="text-gray-100 max-w-[150px] truncate">
-                  {{ getChapterAtTime(hoverTime).title }}
+                  v-if="hoverTime !== null"
+                  class="absolute bottom-full mb-2 -translate-x-1/2 bg-black/90 text-white text-s px-2 py-1 rounded pointer-events-none z-20"
+                  :style="{ left: hoverPosition + '%' }">
+                  <div class="font-mono">{{ formatTime(hoverTime) }}</div>
+                  <div
+                    v-if="getChapterAtTime(hoverTime)"
+                    class="text-gray-400 max-w-[150px]">
+                    {{ getChapterAtTime(hoverTime).title }}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="flex items-center justify-between">
-              <!-- Left Controls -->
-              <div class="flex items-center gap-4">
-                <!-- Play/Pause -->
-                <button
-                  @click="togglePlay"
-                  class="hover:text-blue-400 transition-colors">
-                  <svg
-                    v-if="!isPlaying"
-                    class="w-8 h-8"
-                    fill="currentColor"
-                    viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                  <svg
-                    v-else
-                    class="w-8 h-8"
-                    fill="currentColor"
-                    viewBox="0 0 24 24">
-                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-                  </svg>
-                </button>
-
-                <!-- Volume -->
-                <div class="flex items-center gap-2 group/vol">
+              <div class="flex items-center justify-between">
+                <!-- Left Controls -->
+                <div class="flex items-center gap-4">
+                  <!-- Play/Pause -->
                   <button
-                    @click="volume === 0 ? player.volume(1) : player.volume(0)"
+                    @click="togglePlay"
                     class="hover:text-blue-400 transition-colors">
                     <svg
-                      v-if="volume === 0"
+                      v-if="!isPlaying"
+                      class="w-8 h-8"
+                      fill="currentColor"
+                      viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                    <svg
+                      v-else
+                      class="w-8 h-8"
+                      fill="currentColor"
+                      viewBox="0 0 24 24">
+                      <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                    </svg>
+                  </button>
+
+                  <!-- Volume -->
+                  <div class="flex items-center gap-2 group/vol">
+                    <button
+                      @click="volume === 0 ? player.volume(1) : player.volume(0)"
+                      class="hover:text-blue-400 transition-colors">
+                      <svg
+                        v-if="volume === 0"
+                        class="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                      </svg>
+                      <svg
+                        v-else
+                        class="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                      </svg>
+                    </button>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      :value="volume"
+                      @input="onVolumeChange"
+                      class="w-0 overflow-hidden group-hover/vol:w-24 transition-all duration-300 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                  </div>
+
+                  <!-- Time -->
+                  <div class="text-sm font-mono text-gray-300">{{ formatTime(currentTime) }} / {{ formatTime(duration) }}</div>
+
+                  <!-- Chapter Name -->
+                  <div
+                    v-if="currentChapterName"
+                    class="text-sm text-gray-100 border-l border-gray-600 hover:bg-gray-400 rounded-lg px-4 py-1 cursor-pointer"
+                    @click="chaptersVisible = !chaptersVisible">
+                    {{ currentChapterName }}
+                  </div>
+                </div>
+
+                <!-- Right Controls -->
+                <div class="flex items-center gap-4">
+                  <button
+                    @click="toggleFullscreen"
+                    class="hover:text-blue-400 transition-colors">
+                    <svg
+                      v-if="!isFullscreen"
                       class="w-6 h-6"
                       fill="none"
                       stroke="currentColor"
@@ -307,12 +371,7 @@
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="2"
-                        d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                        d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                     </svg>
                     <svg
                       v-else
@@ -324,92 +383,82 @@
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="2"
-                        d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        d="M4 16v4h4m-4-4l5 5m11-5l-5 5m5-5v4h-4M4 8V4h4M4 8l5-5M16 4h4v4m-4-4l5 5" />
                     </svg>
                   </button>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    :value="volume"
-                    @input="onVolumeChange"
-                    class="w-0 overflow-hidden group-hover/vol:w-24 transition-all duration-300 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500" />
                 </div>
-
-                <!-- Time -->
-                <div class="text-sm font-mono text-gray-300">{{ formatTime(currentTime) }} / {{ formatTime(duration) }}</div>
-
-                <!-- Chapter Name -->
-                <div
-                  v-if="currentChapterName"
-                  class="text-sm text-gray-100 border-l border-gray-600 pl-4 truncate max-w-[200px]">
-                  {{ currentChapterName }}
-                </div>
-              </div>
-
-              <!-- Right Controls -->
-              <div class="flex items-center gap-4">
-                <button
-                  @click="toggleFullscreen"
-                  class="hover:text-blue-400 transition-colors">
-                  <svg
-                    v-if="!isFullscreen"
-                    class="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                  </svg>
-                  <svg
-                    v-else
-                    class="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M4 16v4h4m-4-4l5 5m11-5l-5 5m5-5v4h-4M4 8V4h4M4 8l5-5M16 4h4v4m-4-4l5 5" />
-                  </svg>
-                </button>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Info Section (Below player) -->
-        <div class="p-6 bg-gray-900 overflow-y-auto max-h-60 lg:max-h-none">
-          <h2 class="text-xl font-bold mb-2">{{ videoData?.title }}</h2>
-          <div class="flex items-center gap-4 text-gray-400 mb-4 text-sm">
-            <span>{{ videoData?.uploader }}</span>
-            <span>{{ formatDate(videoData?.upload_date) }}</span>
+        <div class="p-8 bg-gray-900">
+          <h2 class="text-2xl font-bold mb-4 text-white">{{ videoData?.title }}</h2>
+          <div class="flex items-center gap-6 text-gray-400 mb-6 text-sm border-b border-gray-800 pb-4">
+            <span class="flex items-center gap-2">
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <a
+                :href="videoData?.uploader_url ?? videoData?.channel_url"
+                target="_blank"
+                rel="noreferrer">
+                {{ videoData?.uploader }}
+              </a>
+            </span>
+            <span class="flex items-center gap-2">
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {{ formatDate(videoData?.upload_date) }}
+            </span>
           </div>
-          <div class="prose prose-invert max-w-none whitespace-pre-wrap text-gray-300 text-sm">
+          <div class="prose prose-invert max-w-none whitespace-pre-wrap text-gray-300">
             {{ videoData?.description }}
           </div>
         </div>
       </div>
 
-      <!-- Chapters Sidebar -->
+      <!-- Chapters Sidebar (Fixed Right) -->
       <div
-        v-if="chapters && chapters.length > 0"
-        class="lg:w-80 bg-gray-800 border-l border-gray-700 overflow-y-auto flex-shrink-0">
-        <div class="p-4 border-b border-gray-700 font-semibold">In this video</div>
+        v-if="chapters && chapters.length > 0 && chaptersVisible"
+        class="chapters lg:w-96 bg-gray-800 border-l border-gray-700 overflow-y-auto flex-shrink-0 custom-scrollbar rounded-lg">
+        <div class="p-4 border-b border-gray-700 font-semibold bg-gray-800 sticky top-0 z-10 flex items-center justify-between">
+          <span>In this video</span>
+          <button
+            class="w-10 h-10 rounded-lg text-6xl bg-transparent hover:bg-gray-700 inline-flex items-center justify-center cursor-pointer"
+            @click="chaptersVisible = !chaptersVisible">
+            <i class="bi bi-x text-xl text-white" />
+          </button>
+        </div>
         <ul>
           <li
             v-for="(chapter, index) in chapters"
             :key="index"
-            class="p-3 hover:bg-gray-700 cursor-pointer flex gap-3 text-sm transition-colors border-b border-gray-700/50 last:border-0"
+            class="px-3 py-2 hover:bg-gray-700 cursor-pointer text-sm transition-colors border-b border-gray-700/50 last:border-0"
             :class="{ 'bg-gray-700/50': currentChapterName === chapter.title }"
             @click="seekTo(chapter.start_time)">
-            <span class="font-mono text-blue-400">{{ formatTime(chapter.start_time) }}</span>
-            <span class="truncate">{{ chapter.title }}</span>
+            <div class="text-gray-300 font-bold group-hover:text-white">{{ chapter.title }}</div>
+            <div class="font-mono inline-block p-1 mt-1 bg-gray-700 text-blue-400 font-medium group-hover:text-blue-300 rounded-md">
+              {{ formatTime(chapter.start_time) }}
+            </div>
           </li>
         </ul>
       </div>
@@ -431,5 +480,9 @@
   /* Hide default big play button since we have our own or click-to-play */
   .video-js .vjs-big-play-button {
     display: none;
+  }
+
+  .chapters {
+    max-height: calc(100vh - 200px);
   }
 </style>

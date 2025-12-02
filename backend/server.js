@@ -198,6 +198,8 @@ app.get('/api/playlist/:name', async (req, res) => {
           filename: file,
           title: metadata.fulltitle || file,
           uploader: metadata.uploader,
+          uploader_url: metadata.uploader_url,
+          channel_url: metadata.channel_url,
           upload_date: metadata.upload_date,
           duration: metadata.duration,
           chapters: metadata.chapters,
