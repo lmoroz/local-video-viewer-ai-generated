@@ -24,6 +24,9 @@
   const volume = ref(1)
   const isFullscreen = ref(false)
   const showControls = ref(false)
+  const playbackRate = ref(1)
+  const showSpeedMenu = ref(false)
+  const customSpeed = ref(1)
   let controlsTimeout = null
 
   const chapters = computed(() => videoData.value?.chapters || [])
@@ -88,6 +91,8 @@
       volume.value = vol
       localStorage.setItem('video-volume', vol)
     })
+
+    player.value.on('ratechange', () => (playbackRate.value = player.value.playbackRate()))
     player.value.on('fullscreenchange', () => (isFullscreen.value = player.value.isFullscreen()))
   }
 
@@ -115,6 +120,20 @@
     const val = parseFloat(e.target.value)
     if (player.value) {
       player.value.volume(val)
+    }
+  }
+
+  const setPlaybackRate = rate => {
+    if (player.value) {
+      player.value.playbackRate(rate)
+      showSpeedMenu.value = false
+    }
+  }
+
+  const applyCustomSpeed = () => {
+    const rate = parseFloat(customSpeed.value)
+    if (!isNaN(rate) && rate > 0) {
+      setPlaybackRate(rate)
     }
   }
 
@@ -358,6 +377,47 @@
 
                 <!-- Right Controls -->
                 <div class="flex items-center gap-4">
+                  <!-- Speed Control -->
+                  <div class="relative">
+                    <button
+                      @click="showSpeedMenu = !showSpeedMenu"
+                      class="hover:text-blue-400 transition-colors font-medium w-12 text-center text-sm">
+                      {{ playbackRate }}x
+                    </button>
+
+                    <!-- Speed Popup -->
+                    <div
+                      v-if="showSpeedMenu"
+                      class="absolute bottom-full right-0 mb-4 bg-gray-800 rounded-lg shadow-xl p-2 w-48 z-30 border border-gray-700">
+                      <div class="flex flex-col gap-1 max-h-60 overflow-y-auto custom-scrollbar">
+                        <button
+                          v-for="rate in [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4]"
+                          :key="rate"
+                          @click="setPlaybackRate(rate)"
+                          class="px-3 py-1 text-left hover:bg-gray-700 rounded text-sm transition-colors"
+                          :class="{ 'text-blue-400 font-bold': playbackRate === rate, 'text-gray-300': playbackRate !== rate }">
+                          {{ rate }}x
+                        </button>
+                      </div>
+                      <div class="border-t border-gray-700 mt-2 pt-2 px-1">
+                        <div class="text-xs text-gray-400 mb-1">Custom Speed</div>
+                        <div class="flex gap-2">
+                          <input
+                            type="number"
+                            v-model="customSpeed"
+                            step="0.1"
+                            min="0.1"
+                            class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white focus:border-blue-500 outline-none"
+                            @keyup.enter="applyCustomSpeed" />
+                          <button
+                            @click="applyCustomSpeed"
+                            class="bg-blue-600 hover:bg-blue-500 text-white px-2 rounded text-sm transition-colors">
+                            Go
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   <button
                     @click="toggleFullscreen"
                     class="hover:text-blue-400 transition-colors">
