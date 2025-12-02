@@ -2,4 +2,4 @@
 trigger: always_on
 ---
 
-in vue files place <script setup> block over <template> block
+place <script setup> block over <template> block in .vue files 
