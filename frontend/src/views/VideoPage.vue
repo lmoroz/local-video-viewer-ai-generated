@@ -92,12 +92,12 @@
 <template>
   <div class="min-h-screen bg-gray-900 text-white">
     <!-- Header -->
-    <div class="bg-gray-800 p-4 flex items-center gap-4 shadow-md">
+    <div class="sticky top-0 z-20 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 p-4 flex items-center gap-4 shadow-md">
       <button
         @click="goBack"
-        class="p-2 rounded-full hover:bg-gray-700 transition-colors">
+        class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors text-gray-300 hover:text-white group">
         <svg
-          class="w-6 h-6 text-white"
+          class="w-5 h-5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24">
@@ -107,8 +107,10 @@
             stroke-width="2"
             d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
+        <span class="font-medium">{{ playlist }}</span>
       </button>
-      <h1 class="text-lg font-semibold truncate">{{ videoData?.title || filename }}</h1>
+      <div class="h-6 w-px bg-gray-700 mx-2"></div>
+      <h1 class="text-lg font-semibold truncate text-gray-100">{{ videoData?.title || filename }}</h1>
     </div>
 
     <div class="flex flex-col lg:flex-row h-[calc(100vh-64px)]">
