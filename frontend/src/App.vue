@@ -1,7 +1,10 @@
-<script setup></script>
-
 <template>
-  <div/>
+  <router-view />
 </template>
 
-<style scoped></style>
+<script setup>
+</script>
+
+<style>
+/* Global styles can go here */
+</style>
