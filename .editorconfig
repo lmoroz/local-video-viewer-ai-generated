@@ -1,0 +1,16 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+tab_width = 2
+trim_trailing_whitespace = true
+
+[*.{js,jsx,mjs,cjs,ts,tsx,mts,cts,vue}]
+indent_size = 2
+insert_final_newline = true
+
+
+[*.md]
+trim_trailing_whitespace = false
+insert_final_newline = true
