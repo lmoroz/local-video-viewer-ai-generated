@@ -50,6 +50,17 @@
         }
       ]
     })
+
+    // Restore volume
+    const savedVolume = localStorage.getItem('video-volume')
+    if (savedVolume !== null) {
+      player.value.volume(parseFloat(savedVolume))
+    }
+
+    // Save volume on change
+    player.value.on('volumechange', () => {
+      localStorage.setItem('video-volume', player.value.volume())
+    })
   }
 
   const seekTo = time => {
@@ -98,7 +109,6 @@
         class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors text-gray-300 hover:text-white group">
         <svg
           class="w-5 h-5"
-          fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24">
           <path
@@ -109,7 +119,7 @@
         </svg>
         <span class="font-medium">{{ playlist }}</span>
       </button>
-      <div class="h-6 w-px bg-gray-700 mx-2"></div>
+      <div class="h-6 w-px bg-gray-700 mx-2" />
       <h1 class="text-lg font-semibold truncate text-gray-100">{{ videoData?.title || filename }}</h1>
     </div>
 
@@ -121,7 +131,7 @@
             ref="videoPlayer"
             class="video-js vjs-big-play-centered w-full h-full"
             controls
-            preload="auto"/>
+            preload="auto" />
         </div>
 
         <!-- Info Section (Below player) -->
