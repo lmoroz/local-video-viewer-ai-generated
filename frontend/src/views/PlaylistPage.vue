@@ -75,13 +75,13 @@
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 p-8">
+  <div class="min-h-screen bg-gray-900 p-8">
     <div class="max-w-7xl mx-auto">
       <!-- Header -->
       <div class="mb-8 flex items-center gap-4">
         <button
           @click="goBack"
-          class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+          class="p-2 rounded-full hover:bg-gray-700 transition-colors">
           <svg
             class="w-6 h-6 text-gray-600"
             fill="none"
@@ -94,7 +94,7 @@
               d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
         </button>
-        <h1 class="text-2xl font-bold text-gray-900 truncate">{{ name }}</h1>
+        <h1 class="text-2xl font-bold text-white truncate">{{ name }}</h1>
       </div>
 
       <div
@@ -119,7 +119,7 @@
 
         <!-- Layout adjustment based on requirements -->
         <div class="lg:w-1/4">
-          <div class="bg-white rounded-xl shadow-sm p-4 sticky top-8">
+          <div class="bg-gray-800 rounded-xl shadow-sm p-4 sticky top-8">
             <!-- We don't have playlist cover explicitly in the API response for details,
                  but we could pass it or fetch it.
                  Actually, the API /playlist/:name returns list of videos.
@@ -131,7 +131,7 @@
                  we can try to guess or just skip if not critical.
                  However, let's try to use the first video's thumbnail or a generic icon.
             -->
-            <div class="aspect-video bg-gray-200 rounded-lg overflow-hidden mb-4">
+            <div class="aspect-video bg-gray-700 rounded-lg overflow-hidden mb-4">
               <img
                 v-if="videos.length > 0 && videos[0].thumbnail"
                 :src="api.getFileUrl(videos[0].thumbnail)"
@@ -153,14 +153,14 @@
               </div>
             </div>
             <h2 class="font-bold text-lg mb-2">{{ name }}</h2>
-            <p class="text-gray-600">{{ videos.length }} videos</p>
-            <p class="text-gray-500 text-sm">{{ formatDuration(totalDuration) }}</p>
+            <p class="text-gray-400">{{ videos.length }} videos</p>
+            <p class="text-gray-400 text-sm">{{ formatDuration(totalDuration) }}</p>
 
             <div class="mt-6">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Sort by</label>
+              <label class="block text-sm font-medium text-gray-300 mb-2">Sort by</label>
               <select
                 v-model="sortBy"
-                class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                class="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 <option value="name">Name</option>
                 <option value="date">Date</option>
               </select>
@@ -174,10 +174,10 @@
             <div
               v-for="video in sortedVideos"
               :key="video.filename"
-              class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden flex cursor-pointer group"
+              class="bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden flex cursor-pointer group"
               @click="openVideo(video)">
               <!-- Thumbnail -->
-              <div class="w-48 flex-shrink-0 bg-gray-200 relative">
+              <div class="w-48 flex-shrink-0 bg-gray-700 relative">
                 <img
                   v-if="video.thumbnail"
                   :src="api.getFileUrl(video.thumbnail)"
@@ -209,13 +209,13 @@
 
               <!-- Info -->
               <div class="p-4 flex-grow">
-                <h3 class="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                <h3 class="font-semibold text-white mb-1 group-hover:text-blue-400 transition-colors">
                   {{ video.title }}
                 </h3>
-                <div class="text-sm text-gray-600 mb-2">
+                <div class="text-sm text-gray-400 mb-2">
                   {{ video.uploader }}
                 </div>
-                <div class="text-xs text-gray-500">
+                <div class="text-xs text-gray-400">
                   {{ formatDate(video.upload_date) }}
                 </div>
               </div>

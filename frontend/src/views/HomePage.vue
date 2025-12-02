@@ -64,7 +64,7 @@
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 px-8 py-3">
+  <div class="min-h-screen bg-gray-900 px-8 py-3">
     <div class="max-w-7xl mx-auto">
       <div class="mb-12">
         <PathInput
@@ -96,9 +96,9 @@
         <div
           v-for="playlist in playlists"
           :key="playlist.name"
-          class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden cursor-pointer group"
+          class="bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden cursor-pointer group"
           @click="openPlaylist(playlist)">
-          <div class="aspect-video bg-gray-200 relative overflow-hidden">
+          <div class="aspect-video bg-gray-700 relative overflow-hidden">
             <img
               v-if="playlist.cover"
               :src="api.getFileUrl(playlist.cover)"
@@ -124,11 +124,11 @@
 
           <div class="p-4">
             <h3
-              class="font-semibold text-gray-900 line-clamp-2 mb-2"
+              class="font-semibold text-white line-clamp-2 mb-2"
               :title="playlist.title || playlist.name">
               {{ playlist.title || playlist.name }}
             </h3>
-            <div class="text-sm text-gray-500">
+            <div class="text-sm text-gray-400">
               {{ formatDuration(playlist.totalDuration) }}
             </div>
           </div>

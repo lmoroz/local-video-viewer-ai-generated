@@ -5,6 +5,4 @@
 <script setup>
 </script>
 
-<style>
-/* Global styles can go here */
-</style>
+
