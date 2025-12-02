@@ -19,16 +19,6 @@ export default defineConfigWithVueTs([
 
   {
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unsafe-function-type': 'off',
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_'
-        }
-      ],
       'vue/multi-word-component-names': 'off',
       'vue/html-self-closing': [
         'error',
