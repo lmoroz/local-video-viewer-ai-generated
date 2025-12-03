@@ -370,7 +370,7 @@
                   <!-- Chapter Name -->
                   <div
                     v-if="currentChapterName"
-                    class="text-sm text-gray-100 border-l border-gray-600 hover:bg-gray-400 rounded-lg px-4 py-1 cursor-pointer"
+                    class="text-sm text-gray-100 border-l border-gray-800 hover:bg-gray-8 00/90 rounded-lg px-4 py-1 cursor-pointer"
                     @click="chaptersVisible = !chaptersVisible">
                     {{ currentChapterName }}
                   </div>
