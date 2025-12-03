@@ -115,9 +115,9 @@
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-900">
+  <div class="min-h-screen">
     <!-- Fixed Header -->
-    <div class="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 shadow-md">
+    <div class="sticky top-0 z-10 backdrop-blur-sm border-b border-gray-800 shadow-md">
       <div class="max-w-7xl mx-auto px-8 py-4 flex items-center gap-4">
         <button
           @click="goBack"
@@ -159,8 +159,8 @@
         v-else
         class="flex flex-col lg:flex-row gap-8">
         <!-- Sidebar -->
-        <div class="lg:w-1/4">
-          <div class="bg-gray-800 rounded-xl shadow-sm p-4 sticky top-24">
+        <div class="lg:w-1/4 h-full">
+          <div class="bg-linear-to-b from-gray-800/95 to-transparent rounded-xl p-4 sticky top-24 h-80 max-h-80">
             <div class="aspect-video bg-gray-700 rounded-lg overflow-hidden mb-4">
               <img
                 v-if="videos.length > 0 && videos[0].thumbnail"
@@ -186,12 +186,12 @@
             <p class="text-gray-400">{{ videos.length }} videos</p>
             <p class="text-gray-400 text-sm">{{ formatDuration(totalDuration) }}</p>
 
-            <div class="mt-6">
-              <label class="block text-sm font-medium text-gray-300 mb-2">Sort by</label>
+            <div class="mt-6 flex items-center justify-center text-gray-300 gap-3">
+              <label class="text-2xl font-medium"><i class="bi bi-filter" /></label>
               <div class="relative">
                 <select
                   v-model="sortBy"
-                  class="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 appearance-none py-2 pl-3 pr-10">
+                  class="bg-gray-900/95 border-gray-800 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 appearance-none py-2 pl-3 pr-10">
                   <option value="default">Default (Position)</option>
                   <option value="date_desc">Date (Newest first)</option>
                   <option value="date_asc">Date (Oldest first)</option>
@@ -220,17 +220,16 @@
         <div class="lg:w-3/4">
           <div class="space-y-4">
             <router-link
-              v-for="(video, index) in sortedVideos"
+              v-for="video in sortedVideos"
               :key="video.originalIndex"
               :to="{
                 name: 'Video',
                 params: { filename: video.filename },
                 query: { dir: props.dir, playlist: props.name }
               }"
-              class="bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex cursor-pointer group border border-transparent hover:border-gray-700">
+              class="shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex cursor-pointer">
               <!-- Numbering -->
-              <div
-                class="w-12 flex-shrink-0 flex items-center justify-center text-gray-500 font-mono text-lg font-bold bg-gray-800/50 border-r border-gray-700">
+              <div class="w-12 flex-shrink-0 flex items-center justify-center text-gray-500 font-mono text-lg font-bold">
                 {{ video.originalIndex + 1 }}
               </div>
 

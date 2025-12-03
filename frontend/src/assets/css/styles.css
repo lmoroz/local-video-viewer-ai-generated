@@ -1,9 +1,12 @@
 @import 'tailwindcss';
+@import url('../fonts/Roboto/css2.css');
 
 :root {
     color-scheme: dark;
+    font-family: Roboto, Arial, sans-serif;
+    --color-black: rgb(15, 15, 15)
 }
 
 body {
-    @apply bg-gray-900 text-gray-100;
+    @apply bg-black text-gray-100;
 }
