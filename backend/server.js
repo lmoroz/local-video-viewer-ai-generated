@@ -38,6 +38,12 @@ async function findFileByPrefix(dir, prefix, extensions) {
   return null;
 }
 
+// Helper function to extract ID from filename
+function extractId(filename) {
+  const match = filename.match(/\[([a-zA-Z0-9_-]+)\]/);
+  return match ? match[1] : null;
+}
+
 // GET /api/playlists
 app.get('/api/playlists', async (req, res) => {
   const {dir} = req.query;
@@ -59,21 +65,23 @@ app.get('/api/playlists', async (req, res) => {
       const stat = await fs.stat(itemPath);
 
       if (stat.isDirectory()) {
-        // Look for playlist info
-        // Pattern: 000 - ... .info.json
-        // We assume the playlist info file starts with "000 - " and ends with ".info.json"
-        // Or we just look for ANY .info.json that looks like a playlist info?
-        // Based on sample: "000 - Собеседования node.js [...].info.json"
-
         let title = item;
         let coverPath = null;
         let videoCount = 0;
         let totalDuration = 0;
+        let id = null;
 
         const files = await fs.readdir(itemPath);
 
-        // Find info.json for playlist
+        // Find info.json for playlist (starts with "000 - ")
         const infoFile = files.find(f => f.startsWith('000 - ') && f.endsWith('.info.json'));
+
+        // Find any file starting with "000 - " to extract ID
+        const zeroFile = files.find(f => f.startsWith('000 - '));
+        if (zeroFile) {
+          id = extractId(zeroFile);
+        }
+
         if (infoFile) {
           try {
             const infoData = await fs.readJson(path.join(itemPath, infoFile));
@@ -120,7 +128,8 @@ app.get('/api/playlists', async (req, res) => {
         }
 
         playlists.push({
-          name: item,
+          id, // Add ID
+          name: item, // Keep name for reference/fallback if needed, but UI should use ID
           title,
           cover: coverPath,
           videoCount,
@@ -136,26 +145,56 @@ app.get('/api/playlists', async (req, res) => {
   }
 });
 
-// GET /api/playlist/:name
-app.get('/api/playlist/:name', async (req, res) => {
+// GET /api/playlist/:id
+app.get('/api/playlist/:id', async (req, res) => {
   const {dir} = req.query;
-  const {name} = req.params;
+  const {id} = req.params;
 
   if (!dir || typeof dir !== 'string') {
     return res.status(400).json({error: 'Missing or invalid "dir" query parameter'});
   }
 
-  const playlistPath = path.join(dir, name);
-
-  if (!(await fs.pathExists(playlistPath))) {
-    return res.status(404).json({error: 'Playlist not found'});
-  }
-
   try {
+    // Find playlist directory by ID
+    // We have to scan the directory to find the folder that contains the "000 - ... [id]..." file
+    const items = await fs.readdir(dir);
+    let playlistPath = null;
+    let playlistDirName = null;
+
+    for (const item of items) {
+      const itemPath = path.join(dir, item);
+      const stat = await fs.stat(itemPath);
+      if (stat.isDirectory()) {
+        const files = await fs.readdir(itemPath);
+        const zeroFile = files.find(f => f.startsWith('000 - '));
+        if (zeroFile && extractId(zeroFile) === id) {
+          playlistPath = itemPath;
+          playlistDirName = item;
+          break;
+        }
+      }
+    }
+
+    if (!playlistPath) {
+      return res.status(404).json({error: 'Playlist not found'});
+    }
+
     const files = await fs.readdir(playlistPath);
     const videos = [];
     const videoExtensions = ['.mp4', '.mkv', '.webm'];
 
+    const infoFile = files.find(f => f.startsWith('000 - ') && f.endsWith('.info.json'));
+    let title = playlistPath;
+    if (infoFile) {
+      try {
+        const infoData = await fs.readJson(path.join(playlistPath, infoFile));
+        if (infoData.title) {
+          title = infoData.title;
+        }
+      } catch (e) {
+        console.error(`Error reading info.json for ${ item }:`, e);
+      }
+    }
     for (const file of files) {
       const ext = path.extname(file).toLowerCase();
       if (videoExtensions.includes(ext)) {
@@ -195,6 +234,7 @@ app.get('/api/playlist/:name', async (req, res) => {
         }
 
         videos.push({
+          id: extractId(file), // Extract video ID
           filename: file,
           title: metadata.fulltitle || file,
           uploader: metadata.uploader,
@@ -210,7 +250,7 @@ app.get('/api/playlist/:name', async (req, res) => {
       }
     }
 
-    res.json(videos);
+    res.json({videos, title});
   } catch (err) {
     console.error(err);
     res.status(500).json({error: 'Internal server error'});

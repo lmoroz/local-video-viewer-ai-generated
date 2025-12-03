@@ -4,22 +4,23 @@
   import api from '../api'
 
   const props = defineProps({
-    name: String,
+    id: String,
     dir: String
   })
 
   const router = useRouter()
   const videos = ref([])
+  const playlistTitle = ref('')
   const loading = ref(true)
   const error = ref(null)
   const sortBy = ref('default') // default, date_asc, date_desc, title_asc, title_desc
 
   // Load sort order
   watch(
-    () => props.name,
-    newName => {
-      if (!newName) return
-      const saved = localStorage.getItem(`playlist-sort-${newName}`)
+    () => props.id,
+    newId => {
+      if (!newId) return
+      const saved = localStorage.getItem(`playlist-sort-${newId}`)
       if (saved) {
         sortBy.value = saved
       } else {
@@ -31,8 +32,8 @@
 
   // Save sort order
   watch(sortBy, newValue => {
-    if (props.name) {
-      localStorage.setItem(`playlist-sort-${props.name}`, newValue)
+    if (props.id) {
+      localStorage.setItem(`playlist-sort-${props.id}`, newValue)
     }
   })
 
@@ -60,15 +61,19 @@
 
   onMounted(async () => {
     try {
-      const response = await api.getPlaylistDetails(props.name, props.dir)
-      videos.value = response.data.map((v, i) => ({ ...v, originalIndex: i }))
-      document.title = props.name
+      const response = await api.getPlaylistDetails(props.id, props.dir)
+
+      videos.value = response.data.videos.map((v, i) => ({ ...v, originalIndex: i }))
+      playlistTitle.value = response.data.title || props.id
+
+      document.title = playlistTitle.value
+
       // Restore scroll position
       setTimeout(() => {
-        const savedScroll = sessionStorage.getItem(`scroll-pos-${props.name}`)
+        const savedScroll = sessionStorage.getItem(`scroll-pos-${props.id}`)
         if (savedScroll) {
           window.scrollTo(0, parseInt(savedScroll))
-          sessionStorage.removeItem(`scroll-pos-${props.name}`)
+          sessionStorage.removeItem(`scroll-pos-${props.id}`)
         }
       }, 100)
     } catch (err) {
@@ -80,9 +85,7 @@
   })
 
   onBeforeRouteLeave((to, from, next) => {
-    console.log('%cwindow.scrollY = ', 'color: yellow', window.scrollY)
-    sessionStorage.setItem(`scroll-pos-${props.name}`, window.scrollY)
-    console.log(`%cscroll-pos-${props.name}`, 'color: yellow', sessionStorage.getItem(`scroll-pos-${props.name}`))
+    sessionStorage.setItem(`scroll-pos-${props.id}`, window.scrollY)
     next()
   })
 
@@ -136,7 +139,7 @@
           </svg>
         </button>
         <div class="flex flex-col">
-          <h1 class="text-xl font-bold text-white truncate">{{ name }}</h1>
+          <h1 class="text-xl font-bold text-white truncate">{{ playlistTitle }}</h1>
           <span class="text-xs text-gray-500 font-mono">{{ dir || '/' }}</span>
         </div>
       </div>
@@ -182,7 +185,7 @@
                 </svg>
               </div>
             </div>
-            <h2 class="font-bold text-lg mb-2 text-white">{{ name }}</h2>
+            <h2 class="font-bold text-lg mb-2 text-white">{{ playlistTitle }}</h2>
             <p class="text-gray-400">{{ videos.length }} videos</p>
             <p class="text-gray-400 text-sm">{{ formatDuration(totalDuration) }}</p>
 
@@ -224,8 +227,8 @@
               :key="video.originalIndex"
               :to="{
                 name: 'Video',
-                params: { filename: video.filename },
-                query: { dir: props.dir, playlist: props.name }
+                params: { videoId: video.id || video.filename, playlistId: props.id },
+                query: { dir: props.dir }
               }"
               class="shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex cursor-pointer">
               <!-- Numbering -->

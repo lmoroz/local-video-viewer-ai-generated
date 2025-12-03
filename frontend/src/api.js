@@ -11,8 +11,8 @@ export default {
     getPlaylists(dir) {
         return apiClient.get('/playlists', { params: { dir } });
     },
-    getPlaylistDetails(name, dir) {
-        return apiClient.get(`/playlist/${encodeURIComponent(name)}`, { params: { dir } });
+    getPlaylistDetails(id, dir) {
+        return apiClient.get(`/playlist/${encodeURIComponent(id)}`, { params: { dir } });
     },
     getFileUrl(path) {
         if (!path) return '';

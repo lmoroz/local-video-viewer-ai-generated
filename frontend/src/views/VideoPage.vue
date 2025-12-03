@@ -6,15 +6,16 @@
   import api from '../api'
 
   const props = defineProps({
-    filename: String,
+    videoId: String,
     dir: String,
-    playlist: String
+    playlistId: String
   })
 
   const router = useRouter()
   const videoPlayer = ref(null)
   const player = ref(null)
   const videoData = ref(null)
+  const playlistTitle = ref('')
   const chaptersVisible = ref(true)
 
   // Player State
@@ -42,8 +43,17 @@
 
   onMounted(async () => {
     try {
-      const response = await api.getPlaylistDetails(props.playlist, props.dir)
-      const found = response.data.find(v => v.filename === props.filename)
+      const response = await api.getPlaylistDetails(props.playlistId, props.dir)
+      let videos = []
+      if (Array.isArray(response.data)) {
+        videos = response.data
+        playlistTitle.value = props.playlistId
+      } else {
+        videos = response.data.videos
+        playlistTitle.value = response.data.title || props.playlistId
+      }
+
+      const found = videos.find(v => v.id === props.videoId || v.filename === props.videoId)
       if (found) {
         videoData.value = found
         document.title = videoData.value.title
@@ -182,7 +192,7 @@
   const goBack = () => {
     router.push({
       name: 'Playlist',
-      params: { name: props.playlist },
+      params: { id: props.playlistId },
       query: { dir: props.dir }
     })
   }
@@ -232,10 +242,10 @@
             stroke-width="2"
             d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        <span class="font-medium">{{ playlist }}</span>
+        <span class="font-medium">{{ playlistTitle }}</span>
       </button>
       <div class="h-6 w-px bg-gray-700 mx-2" />
-      <h1 class="text-lg font-semibold truncate text-gray-100">{{ videoData?.title || filename }}</h1>
+      <h1 class="text-lg font-semibold truncate text-gray-100">{{ videoData?.title || videoId }}</h1>
     </div>
 
     <div class="flex flex-col lg:flex-row overflow-hidden gap-9 px-7">

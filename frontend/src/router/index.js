@@ -10,19 +10,19 @@ const routes = [
     component: HomePage
   },
   {
-    path: '/playlist/:name',
+    path: '/playlist/:id',
     name: 'Playlist',
     component: PlaylistPage,
-    props: route => ({ name: route.params.name, dir: route.query.dir })
+    props: route => ({ id: route.params.id, dir: route.query.dir })
   },
   {
-    path: '/video/:filename',
+    path: '/video/:playlistId/:videoId',
     name: 'Video',
     component: VideoPage,
     props: route => ({
-      filename: route.params.filename,
-      dir: route.query.dir,
-      playlist: route.query.playlist
+      videoId: route.params.videoId,
+      playlistId: route.params.playlistId,
+      dir: route.query.dir
     })
   }
 ]

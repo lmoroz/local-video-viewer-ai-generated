@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, watchEffect } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import api from '../api'
 
@@ -11,16 +11,6 @@
   const loading = ref(false)
   const error = ref(null)
   const hasSearched = ref(false)
-
-  onMounted(() => {
-    // Restore path from query or local storage if needed,
-    // but usually we start empty or from previous session if we want.
-    // For now, let's check if query has dir
-    if (route.query.dir) {
-      currentPath.value = route.query.dir
-      loadPlaylists(currentPath.value)
-    }
-  })
 
   const loadPlaylists = async path => {
     if (!path) return
@@ -44,14 +34,6 @@
     }
   }
 
-  const openPlaylist = playlist => {
-    router.push({
-      name: 'Playlist',
-      params: { name: playlist.name },
-      query: { dir: currentPath.value }
-    })
-  }
-
   const formatDuration = seconds => {
     if (!seconds) return '0s'
     const h = Math.floor(seconds / 3600)
@@ -59,8 +41,19 @@
     const s = Math.floor(seconds % 60)
 
     if (h > 0) return `${h}h ${m}m`
-    return `${m}m ${s}s`
+    if (m > 0) return `${m}m ${s}s`
+    return `${s}s`
   }
+
+  watchEffect(() => {
+    // Restore path from query or local storage if needed,
+    // but usually we start empty or from previous session if we want.
+    // For now, let's check if query has dir
+    if (route.query.dir) {
+      currentPath.value = route.query.dir
+      loadPlaylists(currentPath.value)
+    }
+  })
 </script>
 
 <template>
@@ -93,11 +86,15 @@
       <div
         v-else
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <div
+        <router-link
           v-for="playlist in playlists"
-          :key="playlist.name"
-          class="bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden cursor-pointer"
-          @click="openPlaylist(playlist)">
+          :key="playlist.id"
+          :to="{
+            name: 'Playlist',
+            params: { id: playlist.id },
+            query: { dir: currentPath }
+          }"
+          class="bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden cursor-pointer block">
           <div class="aspect-video bg-gray-700 relative overflow-hidden">
             <img
               v-if="playlist.cover"
@@ -132,7 +129,7 @@
               {{ formatDuration(playlist.totalDuration) }}
             </div>
           </div>
-        </div>
+        </router-link>
       </div>
     </div>
   </div>
