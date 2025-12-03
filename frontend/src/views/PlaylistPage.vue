@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, computed, onMounted, watch, nextTick } from 'vue'
+  import { ref, computed, onMounted, watch } from 'vue'
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import api from '../api'
 
@@ -62,7 +62,7 @@
     try {
       const response = await api.getPlaylistDetails(props.name, props.dir)
       videos.value = response.data.map((v, i) => ({ ...v, originalIndex: i }))
-
+      document.title = props.name
       // Restore scroll position
       setTimeout(() => {
         const savedScroll = sessionStorage.getItem(`scroll-pos-${props.name}`)

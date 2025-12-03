@@ -46,6 +46,7 @@
       const found = response.data.find(v => v.filename === props.filename)
       if (found) {
         videoData.value = found
+        document.title = videoData.value.title
         nextTick(() => {
           initPlayer(videoData.value)
         })

@@ -43,4 +43,12 @@ const router = createRouter({
   }
 })
 
+// Получаем исходный title из index.html
+const DEFAULT_TITLE = document.title
+
+router.afterEach(() => {
+  // Сбрасываем title к исходному после каждого перехода
+  document.title = DEFAULT_TITLE
+})
+
 export default router
