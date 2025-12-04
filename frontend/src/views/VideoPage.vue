@@ -1,10 +1,11 @@
 <script setup>
-  import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
+  import { ref, onUnmounted, computed, watch, nextTick } from 'vue'
   import { useRouter } from 'vue-router'
   import videojs from 'video.js'
   import 'video.js/dist/video-js.css'
   import api from '../api'
   import SearchInput from '../components/SearchInput.vue'
+  import { formatDuration } from '../utils.js'
 
   const props = defineProps({
     videoId: String,
@@ -39,19 +40,52 @@
     return current ? current.title : ''
   })
 
-  onMounted(async () => {
+  // Playlist Sidebar Logic
+  const playlistVideos = ref([])
+  const autoPlay = ref(false)
+  const isShuffled = ref(false)
+  const shuffledVideos = ref([])
+
+  const displayVideos = computed(() => {
+    return isShuffled.value ? shuffledVideos.value : playlistVideos.value
+  })
+
+  const currentVideoIndex = computed(() => {
+    return displayVideos.value.findIndex(v => v.id === props.videoId || v.filename === props.videoId)
+  })
+
+  const toggleShuffle = () => {
+    isShuffled.value = !isShuffled.value
+    if (isShuffled.value) {
+      shuffledVideos.value = [...playlistVideos.value].sort(() => Math.random() - 0.5)
+    }
+  }
+
+  const handleVideoEnd = () => {
+    localStorage.removeItem(`video-progress-${props.videoId}`)
+    if (autoPlay.value) {
+      const nextIndex = currentVideoIndex.value + 1
+      if (nextIndex < displayVideos.value.length) {
+        const nextVideo = displayVideos.value[nextIndex]
+        router.push({
+          name: 'Video',
+          params: { videoId: nextVideo.id || nextVideo.filename, playlistId: props.playlistId },
+          query: { dir: props.dir }
+        })
+      }
+    }
+  }
+
+  const loadVideoData = async () => {
+    if (!props.playlistId || !props.dir) return
+    if (player.value) player.value.pause()
+    console.log('[loadVideoData] props.playlistId, props.dir = ', props.playlistId, props.dir)
     try {
       const response = await api.getPlaylistDetails(props.playlistId, props.dir)
-      let videos = []
-      if (Array.isArray(response.data)) {
-        videos = response.data
-        playlistTitle.value = props.playlistId
-      } else {
-        videos = response.data.videos
-        playlistTitle.value = response.data.title || props.playlistId
-      }
+      playlistVideos.value = response.data.videos.map((v, i) => ({ ...v, originalIndex: i }))
+      playlistTitle.value = response.data.title || props.playlistId
 
-      const found = videos.find(v => v.id === props.videoId || v.filename === props.videoId)
+      const found = playlistVideos.value.find(v => v.id === props.videoId || v.filename === props.videoId)
       if (found) {
         videoData.value = found
         document.title = videoData.value.title
@@ -62,47 +96,96 @@
     } catch (err) {
       console.error('Failed to load video data', err)
     }
-  })
+  }
 
   const initPlayer = data => {
     if (!videoPlayer.value) return
+    console.log('[initPlayer] videoPlayer.value = ', videoPlayer.value)
+    console.log('[initPlayer] data = ', data)
+    const newPlayer = !player.value
 
     const src = api.getFileUrl(data.path)
-
-    player.value = videojs(videoPlayer.value, {
-      fluid: false,
-      controls: false, // Hide default controls
-      sources: [
+    console.log('[initPlayer] src = ', src)
+    if (player.value) {
+      player.value.poster(api.getFileUrl(videoData.value.thumbnail))
+      player.value.src([
         {
           src: src,
           type: 'video/mp4'
         }
-      ]
-    })
+      ])
 
-    // Restore volume
-    const savedVolume = localStorage.getItem('video-volume')
-    if (savedVolume !== null) {
-      const vol = parseFloat(savedVolume)
-      player.value.volume(vol)
-      volume.value = vol
+      console.log('[initPlayer] set new poster and src', player.value)
+      player.value.load()
     } else {
-      volume.value = player.value.volume()
+      player.value = videojs(videoPlayer.value, {
+        fluid: false,
+        controls: false, // Hide default controls
+        autoplay: true,
+        sources: [
+          {
+            src: src,
+            type: 'video/mp4'
+          }
+        ]
+      })
+
+      console.log('[initPlayer] videoPlayer.value = ', videoPlayer.value)
+      console.log('[initPlayer] player.value = ', player.value)
+
+      // Restore volume
+      const savedVolume = localStorage.getItem('video-volume')
+      if (savedVolume !== null) {
+        const vol = parseFloat(savedVolume)
+        player.value.volume(vol)
+        volume.value = vol
+      } else {
+        volume.value = player.value.volume()
+      }
+
+      // Event Listeners
+      player.value.on('play', () => (isPlaying.value = true))
+      player.value.on('pause', () => (isPlaying.value = false))
+      player.value.on('timeupdate', () => (currentTime.value = player.value.currentTime()))
+      player.value.on('durationchange', () => {
+        duration.value = player.value.duration()
+
+        console.log(
+          '%c [initPlayer] on durationchange ',
+          'color: yellow',
+          `video-progress-${props.videoId}`,
+          localStorage.getItem(`video-progress-${props.videoId}`)
+        )
+        console.log('%c [initPlayer] on durationchange player.value.duration() = ', 'color: yellow', player.value.duration())
+
+        const savedTime = localStorage.getItem(`video-progress-${props.videoId}`)
+        if (savedTime) {
+          const time = parseFloat(savedTime)
+          // If within 30 seconds of end, start from beginning
+          if (time < player.value.duration() - 10) player.value.currentTime(time - 10)
+          if (!newPlayer) player.value.play()
+        }
+      })
+      player.value.on('volumechange', () => {
+        const vol = player.value.volume()
+        volume.value = vol
+        localStorage.setItem('video-volume', vol)
+      })
+
+      player.value.on('ratechange', () => (playbackRate.value = player.value.playbackRate()))
+
+      player.value.on('ended', handleVideoEnd)
+      player.value.on('fullscreenchange', () => (isFullscreen.value = player.value.isFullscreen()))
+
+      player.value.load()
     }
 
-    // Event Listeners
-    player.value.on('play', () => (isPlaying.value = true))
-    player.value.on('pause', () => (isPlaying.value = false))
-    player.value.on('timeupdate', () => (currentTime.value = player.value.currentTime()))
-    player.value.on('durationchange', () => (duration.value = player.value.duration()))
-    player.value.on('volumechange', () => {
-      const vol = player.value.volume()
-      volume.value = vol
-      localStorage.setItem('video-volume', vol)
+    player.value.on('timeupdate', () => {
+      const time = player.value.currentTime()
+      currentTime.value = time
+      // Save progress
+      if (time > 0) localStorage.setItem(`video-progress-${props.videoId}`, time)
     })
-
-    player.value.on('ratechange', () => (playbackRate.value = player.value.playbackRate()))
-    player.value.on('fullscreenchange', () => (isFullscreen.value = player.value.isFullscreen()))
   }
 
   const togglePlay = () => {
@@ -218,6 +301,8 @@
     })
   }
 
+  watch(() => [props.playlistId, props.dir, props.videoId], loadVideoData, { deep: true, immediate: true })
+
   onUnmounted(() => {
     if (player.value) {
       player.value.dispose()
@@ -237,7 +322,7 @@
           query: { dir: props.dir }
         }"
         class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors text-gray-300 hover:text-white">
-        <i class="bi bi-arrow-left text-xl"/>
+        <i class="bi bi-arrow-left text-xl" />
         <span class="font-medium">{{ playlistTitle }}</span>
       </router-link>
       <div class="h-6 w-px bg-gray-700 mx-2" />
@@ -262,6 +347,7 @@
               class="video-js h-full rounded-lg"
               :poster="api.getFileUrl(videoData.thumbnail)"
               preload="auto"
+              autoplay
               @click="togglePlay" />
 
             <!-- Custom Controls Overlay -->
@@ -314,10 +400,10 @@
                     class="hover:text-blue-400 transition-colors">
                     <i
                       v-if="!isPlaying"
-                      class="bi bi-play-fill text-3xl"/>
+                      class="bi bi-play-fill text-3xl" />
                     <i
                       v-else
-                      class="bi bi-pause-fill text-3xl"/>
+                      class="bi bi-pause-fill text-3xl" />
                   </button>
 
                   <!-- Volume -->
@@ -327,10 +413,10 @@
                       class="hover:text-blue-400 transition-colors">
                       <i
                         v-if="volume === 0"
-                        class="bi bi-volume-mute text-xl"/>
+                        class="bi bi-volume-mute text-xl" />
                       <i
                         v-else
-                        class="bi bi-volume-up text-xl"/>
+                        class="bi bi-volume-up text-xl" />
                     </button>
                     <input
                       type="range"
@@ -402,10 +488,10 @@
                     class="hover:text-blue-400 transition-colors">
                     <i
                       v-if="!isFullscreen"
-                      class="bi bi-fullscreen text-xl"/>
+                      class="bi bi-fullscreen text-xl" />
                     <i
                       v-else
-                      class="bi bi-fullscreen-exit text-xl"/>
+                      class="bi bi-fullscreen-exit text-xl" />
                   </button>
                 </div>
               </div>
@@ -418,7 +504,7 @@
           <h2 class="text-2xl font-bold mb-4 text-white">{{ videoData?.title }}</h2>
           <div class="flex items-center gap-6 text-gray-400 mb-6 text-sm border-b border-gray-800 pb-4">
             <span class="flex items-center gap-2">
-              <i class="bi bi-person"/>
+              <i class="bi bi-person" />
               <a
                 :href="videoData?.uploader_url ?? videoData?.channel_url"
                 target="_blank"
@@ -427,7 +513,7 @@
               </a>
             </span>
             <span class="flex items-center gap-2">
-              <i class="bi bi-calendar"/>
+              <i class="bi bi-calendar" />
               {{ formatDate(videoData?.upload_date) }}
             </span>
           </div>
@@ -437,31 +523,99 @@
         </div>
       </div>
 
-      <!-- Chapters Sidebar (Fixed Right) -->
-      <div
-        v-if="chapters && chapters.length > 0 && chaptersVisible"
-        class="chapters lg:w-96 bg-linear-to-b from-gray-900/95 to-transparent border border-gray-600 overflow-y-auto flex-shrink-0 custom-scrollbar rounded-xl">
-        <div class="p-4 border-b border-gray-700 font-semibold bg-gray-900/95 sticky top-0 z-10 flex items-center justify-between">
-          <span>In this video</span>
-          <button
-            class="w-10 h-10 rounded-lg text-6xl bg-transparent hover:bg-gray-700 inline-flex items-center justify-center cursor-pointer"
-            @click="chaptersVisible = !chaptersVisible">
-            <i class="bi bi-x text-xl text-white" />
-          </button>
+      <div class="lg:w-96 flex flex-col gap-6">
+        <!-- Chapters Sidebar (Fixed Right) -->
+        <div
+          v-if="chapters && chapters.length > 0 && chaptersVisible"
+          class="chapters bg-linear-to-b from-gray-900/95 to-transparent border border-gray-600 overflow-y-auto flex-shrink-0 custom-scrollbar rounded-xl">
+          <div class="p-4 border-b border-gray-700 font-semibold bg-gray-900/95 sticky top-0 z-10 flex items-center justify-between">
+            <span>In this video</span>
+            <button
+              class="w-10 h-10 rounded-lg text-6xl bg-transparent hover:bg-gray-700 inline-flex items-center justify-center cursor-pointer"
+              @click="chaptersVisible = !chaptersVisible">
+              <i class="bi bi-x text-xl text-white" />
+            </button>
+          </div>
+          <ul>
+            <li
+              v-for="(chapter, index) in chapters"
+              :key="index"
+              class="px-3 py-2 hover:bg-gray-700 cursor-pointer text-sm transition-colors border-b border-gray-700/50 last:border-0"
+              :class="{ 'bg-gray-700/50': currentChapterName === chapter.title }"
+              @click="seekTo(chapter.start_time)">
+              <div class="text-gray-300 font-bold group-hover:text-white">{{ chapter.title }}</div>
+              <div class="font-mono inline-block p-1 mt-1 bg-black/90 text-gray-400 font-medium group-hover:text-blue-300 rounded-sm">
+                {{ formatTime(chapter.start_time) }}
+              </div>
+            </li>
+          </ul>
         </div>
-        <ul>
-          <li
-            v-for="(chapter, index) in chapters"
-            :key="index"
-            class="px-3 py-2 hover:bg-gray-700 cursor-pointer text-sm transition-colors border-b border-gray-700/50 last:border-0"
-            :class="{ 'bg-gray-700/50': currentChapterName === chapter.title }"
-            @click="seekTo(chapter.start_time)">
-            <div class="text-gray-300 font-bold group-hover:text-white">{{ chapter.title }}</div>
-            <div class="font-mono inline-block p-1 mt-1 bg-black/90 text-gray-400 font-medium group-hover:text-blue-300 rounded-sm">
-              {{ formatTime(chapter.start_time) }}
+
+        <!-- Playlist Sidebar (Fixed Right, below chapters or standalone) -->
+        <div
+          class="playlist-sidebar lg:w-96 bg-linear-to-b from-gray-900/95 to-transparent border border-gray-600 overflow-hidden flex-shrink-0 custom-scrollbar rounded-xl flex flex-col"
+          :class="{ 'mt-4': chapters && chapters.length > 0 && chaptersVisible }">
+          <div class="p-4 border-b border-gray-700 font-semibold bg-gray-900/95 flex items-center justify-between sticky top-0 z-10">
+            <span>Playlist</span>
+            <div class="flex items-center gap-2">
+              <button
+                @click="toggleShuffle"
+                class="p-2 rounded hover:bg-gray-700 transition-colors"
+                :class="{ 'text-blue-400': isShuffled, 'text-gray-400': !isShuffled }"
+                title="Shuffle">
+                <i class="bi bi-shuffle" />
+              </button>
+              <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-300 hover:text-white select-none">
+                <input
+                  type="checkbox"
+                  v-model="autoPlay"
+                  class="rounded bg-gray-700 border-gray-600 text-blue-600 focus:ring-blue-500" />
+                Auto-play
+              </label>
             </div>
-          </li>
-        </ul>
+          </div>
+          <div class="overflow-y-auto custom-scrollbar flex-1">
+            <router-link
+              v-for="video in displayVideos"
+              :key="video.originalIndex"
+              :to="{
+                name: 'Video',
+                params: { videoId: video.id || video.filename, playlistId: props.playlistId },
+                query: { dir: props.dir }
+              }"
+              class="flex gap-3 p-3 hover:bg-gray-700/50 transition-colors border-b border-gray-700/30 last:border-0 group"
+              :class="{ 'bg-blue-900/20 border-l-2 border-l-blue-500': (video.id || video.filename) === videoId }">
+              <div class="w-24 aspect-video bg-gray-800 rounded overflow-hidden flex-shrink-0 relative">
+                <img
+                  v-if="video.thumbnail"
+                  :src="api.getFileUrl(video.thumbnail)"
+                  class="w-full h-full object-cover" />
+                <div
+                  v-else
+                  class="w-full h-full flex items-center justify-center text-gray-500">
+                  <i class="bi bi-play-circle" />
+                </div>
+                <div class="absolute bottom-0.5 right-0.5 bg-black/80 text-white text-[10px] px-1 rounded font-mono">
+                  {{ formatDuration(video.duration) }}
+                </div>
+              </div>
+              <div class="flex-1 min-w-0 flex flex-col justify-center">
+                <div
+                  class="text-sm font-medium group-hover:text-blue-300 transition-colors"
+                  :class="{ 'text-blue-400': (video.id || video.filename) === videoId, 'text-gray-200': (video.id || video.filename) !== videoId }">
+                  {{ video.title }}
+                </div>
+                <div class="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                  <span
+                    v-if="video.uploader"
+                    class="truncate max-w-[100px]">
+                    {{ video.uploader }}
+                  </span>
+                </div>
+              </div>
+            </router-link>
+          </div>
+        </div>
       </div>
     </div>
   </div>

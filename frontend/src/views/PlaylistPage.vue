@@ -3,6 +3,7 @@
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import api from '../api'
   import SearchInput from '../components/SearchInput.vue'
+  import { formatDuration } from '../utils.js'
 
   const props = defineProps({
     id: String,
@@ -90,21 +91,6 @@
     next()
   })
 
-  const formatDuration = seconds => {
-    if (!seconds) return '0:00'
-    const h = Math.floor(seconds / 3600)
-    const m = Math.floor((seconds % 3600) / 60)
-    const s = Math.floor(seconds % 60)
-
-    if (h > 0) {
-      return `${h}ч ${m.toString().padStart(2, '0')}м ${s.toString().padStart(2, '0')}с`
-    }
-    if (m > 0) {
-      return `${m.toString().padStart(2, '0')}м ${s.toString().padStart(2, '0')}с`
-    }
-    return `${s.toString().padStart(2, '0')}с`
-  }
-
   const formatDate = dateStr => {
     if (!dateStr || dateStr.length !== 8) return dateStr
     const y = dateStr.substring(0, 4)
@@ -134,14 +120,14 @@
           :to="{ name: 'Home', query: { dir: props.dir } }"
           class="p-2 rounded-full hover:bg-gray-700 transition-colors group"
           :title="'Back to ' + (dir || 'Home')">
-          <i class="bi bi-arrow-left text-xl text-gray-400 group-hover:text-white transition-colors"/>
+          <i class="bi bi-arrow-left text-xl text-gray-400 group-hover:text-white transition-colors" />
         </router-link>
         <div class="flex flex-col">
           <h1 class="text-xl font-bold text-white truncate">{{ playlistTitle }}</h1>
           <span class="text-xs text-gray-500 font-mono">{{ dir || '/' }}</span>
         </div>
 
-        <div class="flex-grow"/>
+        <div class="flex-grow" />
         <div class="w-64">
           <SearchInput @search="handleSearch" />
         </div>
@@ -175,7 +161,7 @@
               <div
                 v-else
                 class="w-full h-full flex items-center justify-center text-gray-400">
-                <i class="bi bi-collection-play text-5xl"/>
+                <i class="bi bi-collection-play text-5xl" />
               </div>
             </div>
             <h2 class="font-bold text-lg mb-2 text-white">{{ playlistTitle }}</h2>
@@ -195,7 +181,7 @@
                   <option value="title_desc">Title (Z-A)</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                  <i class="bi bi-chevron-down"/>
+                  <i class="bi bi-chevron-down" />
                 </div>
               </div>
             </div>
@@ -228,7 +214,7 @@
                 <div
                   v-else
                   class="w-full h-full flex items-center justify-center text-gray-400">
-                  <i class="bi bi-play-circle text-3xl"/>
+                  <i class="bi bi-play-circle text-3xl" />
                 </div>
                 <div class="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-mono">
                   {{ formatDuration(video.duration) }}
@@ -244,13 +230,13 @@
                   <span
                     v-if="video.uploader"
                     class="flex items-center gap-1">
-                    <i class="bi bi-person"/>
+                    <i class="bi bi-person" />
                     {{ video.uploader }}
                   </span>
                   <span
                     v-if="video.upload_date"
                     class="flex items-center gap-1">
-                    <i class="bi bi-calendar"/>
+                    <i class="bi bi-calendar" />
                     {{ formatDate(video.upload_date) }}
                   </span>
                 </div>
