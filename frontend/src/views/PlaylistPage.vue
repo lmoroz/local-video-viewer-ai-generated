@@ -89,10 +89,6 @@
     next()
   })
 
-  const goBack = () => {
-    router.push({ name: 'Home', query: { dir: props.dir } })
-  }
-
   const formatDuration = seconds => {
     if (!seconds) return '0:00'
     const h = Math.floor(seconds / 3600)
@@ -122,8 +118,8 @@
     <!-- Fixed Header -->
     <div class="sticky top-0 z-10 backdrop-blur-sm border-b border-gray-800 shadow-md">
       <div class="max-w-7xl mx-auto px-8 py-4 flex items-center gap-4">
-        <button
-          @click="goBack"
+        <router-link
+          :to="{ name: 'Home', query: { dir: props.dir } }"
           class="p-2 rounded-full hover:bg-gray-700 transition-colors group"
           :title="'Back to ' + (dir || 'Home')">
           <svg
@@ -137,7 +133,7 @@
               stroke-width="2"
               d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-        </button>
+        </router-link>
         <div class="flex flex-col">
           <h1 class="text-xl font-bold text-white truncate">{{ playlistTitle }}</h1>
           <span class="text-xs text-gray-500 font-mono">{{ dir || '/' }}</span>

@@ -34,9 +34,6 @@
 
   const currentChapterName = computed(() => {
     if (!chapters.value.length) return ''
-    // Find the chapter that matches current time
-    // Chapters are usually sorted by start_time
-    // We find the last chapter where start_time <= currentTime
     const current = [...chapters.value].reverse().find(c => c.start_time <= currentTime.value)
     return current ? current.title : ''
   })
@@ -189,14 +186,6 @@
     }, 3000)
   }
 
-  const goBack = () => {
-    router.push({
-      name: 'Playlist',
-      params: { id: props.playlistId },
-      query: { dir: props.dir }
-    })
-  }
-
   const formatTime = seconds => {
     if (!seconds && seconds !== 0) return '0:00'
     const h = Math.floor(seconds / 3600)
@@ -229,8 +218,12 @@
   <div class="min-h-screen text-white">
     <!-- Header -->
     <div class="sticky top-0 z-20 p-4 flex items-center gap-4 shadow-md">
-      <button
-        @click="goBack"
+      <router-link
+        :to="{
+          name: 'Playlist',
+          params: { id: props.playlistId },
+          query: { dir: props.dir }
+        }"
         class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors text-gray-300 hover:text-white">
         <svg
           class="w-5 h-5"
@@ -243,7 +236,7 @@
             d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
         <span class="font-medium">{{ playlistTitle }}</span>
-      </button>
+      </router-link>
       <div class="h-6 w-px bg-gray-700 mx-2" />
       <h1 class="text-lg font-semibold truncate text-gray-100">{{ videoData?.title || videoId }}</h1>
     </div>
@@ -280,7 +273,7 @@
                   class="absolute top-0 left-0 bottom-0 bg-red-800 rounded transition-all"
                   :style="{ width: (currentTime / duration) * 100 + '%' }">
                   <div
-                    class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full scale-0 group-hover/progress:scale-100 transition-transform shadow" />
+                    class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full scale-0 group-hover/progress:scale-150 transition-transform shadow" />
                 </div>
 
                 <!-- Chapter Markers -->
