@@ -24,6 +24,11 @@ const routes = [
       playlistId: route.params.playlistId,
       dir: route.query.dir
     })
+  },
+  {
+    path: '/search',
+    name: 'Search',
+    component: () => import('../views/SearchPage.vue')
   }
 ]
 

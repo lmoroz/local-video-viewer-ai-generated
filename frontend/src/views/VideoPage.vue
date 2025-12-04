@@ -4,6 +4,7 @@
   import videojs from 'video.js'
   import 'video.js/dist/video-js.css'
   import api from '../api'
+  import SearchInput from '../components/SearchInput.vue'
 
   const props = defineProps({
     videoId: String,
@@ -206,6 +207,17 @@
     return `${d}.${m}.${y}`
   }
 
+  const handleSearch = query => {
+    if (!query.trim()) return
+    router.push({
+      name: 'Search',
+      query: {
+        q: query,
+        dir: props.dir
+      }
+    })
+  }
+
   onUnmounted(() => {
     if (player.value) {
       player.value.dispose()
@@ -225,20 +237,14 @@
           query: { dir: props.dir }
         }"
         class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors text-gray-300 hover:text-white">
-        <svg
-          class="w-5 h-5"
-          stroke="currentColor"
-          viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
+        <i class="bi bi-arrow-left text-xl"/>
         <span class="font-medium">{{ playlistTitle }}</span>
       </router-link>
       <div class="h-6 w-px bg-gray-700 mx-2" />
-      <h1 class="text-lg font-semibold truncate text-gray-100">{{ videoData?.title || videoId }}</h1>
+      <h1 class="text-lg font-semibold truncate text-gray-100 flex-1">{{ videoData?.title || videoId }}</h1>
+      <div class="w-64">
+        <SearchInput @search="handleSearch" />
+      </div>
     </div>
 
     <div class="flex flex-col lg:flex-row overflow-hidden gap-9 px-7">
@@ -306,20 +312,12 @@
                   <button
                     @click="togglePlay"
                     class="hover:text-blue-400 transition-colors">
-                    <svg
+                    <i
                       v-if="!isPlaying"
-                      class="w-8 h-8"
-                      fill="currentColor"
-                      viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                    <svg
+                      class="bi bi-play-fill text-3xl"/>
+                    <i
                       v-else
-                      class="w-8 h-8"
-                      fill="currentColor"
-                      viewBox="0 0 24 24">
-                      <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-                    </svg>
+                      class="bi bi-pause-fill text-3xl"/>
                   </button>
 
                   <!-- Volume -->
@@ -327,35 +325,12 @@
                     <button
                       @click="volume === 0 ? player.volume(1) : player.volume(0)"
                       class="hover:text-blue-400 transition-colors">
-                      <svg
+                      <i
                         v-if="volume === 0"
-                        class="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-                      </svg>
-                      <svg
+                        class="bi bi-volume-mute text-xl"/>
+                      <i
                         v-else
-                        class="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                      </svg>
+                        class="bi bi-volume-up text-xl"/>
                     </button>
                     <input
                       type="range"
@@ -425,30 +400,12 @@
                   <button
                     @click="toggleFullscreen"
                     class="hover:text-blue-400 transition-colors">
-                    <svg
+                    <i
                       v-if="!isFullscreen"
-                      class="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                    </svg>
-                    <svg
+                      class="bi bi-fullscreen text-xl"/>
+                    <i
                       v-else
-                      class="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M4 16v4h4m-4-4l5 5m11-5l-5 5m5-5v4h-4M4 8V4h4M4 8l5-5M16 4h4v4m-4-4l5 5" />
-                    </svg>
+                      class="bi bi-fullscreen-exit text-xl"/>
                   </button>
                 </div>
               </div>
@@ -461,17 +418,7 @@
           <h2 class="text-2xl font-bold mb-4 text-white">{{ videoData?.title }}</h2>
           <div class="flex items-center gap-6 text-gray-400 mb-6 text-sm border-b border-gray-800 pb-4">
             <span class="flex items-center gap-2">
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
+              <i class="bi bi-person"/>
               <a
                 :href="videoData?.uploader_url ?? videoData?.channel_url"
                 target="_blank"
@@ -480,17 +427,7 @@
               </a>
             </span>
             <span class="flex items-center gap-2">
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+              <i class="bi bi-calendar"/>
               {{ formatDate(videoData?.upload_date) }}
             </span>
           </div>

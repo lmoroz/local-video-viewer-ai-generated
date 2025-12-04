@@ -2,6 +2,7 @@
   import { ref, computed, onMounted, watch } from 'vue'
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import api from '../api'
+  import SearchInput from '../components/SearchInput.vue'
 
   const props = defineProps({
     id: String,
@@ -111,6 +112,17 @@
     const d = dateStr.substring(6, 8)
     return `${d}.${m}.${y}`
   }
+
+  const handleSearch = query => {
+    if (!query.trim()) return
+    router.push({
+      name: 'Search',
+      query: {
+        q: query,
+        dir: props.dir
+      }
+    })
+  }
 </script>
 
 <template>
@@ -122,21 +134,16 @@
           :to="{ name: 'Home', query: { dir: props.dir } }"
           class="p-2 rounded-full hover:bg-gray-700 transition-colors group"
           :title="'Back to ' + (dir || 'Home')">
-          <svg
-            class="w-6 h-6 text-gray-400 group-hover:text-white transition-colors"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
+          <i class="bi bi-arrow-left text-xl text-gray-400 group-hover:text-white transition-colors"/>
         </router-link>
         <div class="flex flex-col">
           <h1 class="text-xl font-bold text-white truncate">{{ playlistTitle }}</h1>
           <span class="text-xs text-gray-500 font-mono">{{ dir || '/' }}</span>
+        </div>
+
+        <div class="flex-grow"/>
+        <div class="w-64">
+          <SearchInput @search="handleSearch" />
         </div>
       </div>
     </div>
@@ -168,17 +175,7 @@
               <div
                 v-else
                 class="w-full h-full flex items-center justify-center text-gray-400">
-                <svg
-                  class="w-12 h-12"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                </svg>
+                <i class="bi bi-collection-play text-5xl"/>
               </div>
             </div>
             <h2 class="font-bold text-lg mb-2 text-white">{{ playlistTitle }}</h2>
@@ -198,17 +195,7 @@
                   <option value="title_desc">Title (Z-A)</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                  <svg
-                    class="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 9l-7 7-7-7" />
-                  </svg>
+                  <i class="bi bi-chevron-down"/>
                 </div>
               </div>
             </div>
@@ -241,22 +228,7 @@
                 <div
                   v-else
                   class="w-full h-full flex items-center justify-center text-gray-400">
-                  <svg
-                    class="w-8 h-8"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <i class="bi bi-play-circle text-3xl"/>
                 </div>
                 <div class="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-mono">
                   {{ formatDuration(video.duration) }}
@@ -272,33 +244,13 @@
                   <span
                     v-if="video.uploader"
                     class="flex items-center gap-1">
-                    <svg
-                      class="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
+                    <i class="bi bi-person"/>
                     {{ video.uploader }}
                   </span>
                   <span
                     v-if="video.upload_date"
                     class="flex items-center gap-1">
-                    <svg
-                      class="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+                    <i class="bi bi-calendar"/>
                     {{ formatDate(video.upload_date) }}
                   </span>
                 </div>

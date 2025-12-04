@@ -2,6 +2,7 @@
   import { ref, onMounted, watchEffect } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import api from '../api'
+  import SearchInput from '../components/SearchInput.vue'
 
   const router = useRouter()
   const route = useRoute()
@@ -34,6 +35,17 @@
     }
   }
 
+  const handleSearch = query => {
+    if (!query.trim()) return
+    router.push({
+      name: 'Search',
+      query: {
+        q: query,
+        dir: currentPath.value
+      }
+    })
+  }
+
   const formatDuration = seconds => {
     if (!seconds) return '0s'
     const h = Math.floor(seconds / 3600)
@@ -59,10 +71,17 @@
 <template>
   <div class="min-h-screen px-8 py-3">
     <div class="max-w-7xl mx-auto">
-      <div class="mb-12">
-        <PathInput
-          v-model="currentPath"
-          @search="loadPlaylists" />
+      <div class="mb-12 flex flex-col md:flex-row gap-4 items-end">
+        <div class="flex-grow w-full">
+          <PathInput
+            v-model="currentPath"
+            @search="loadPlaylists" />
+        </div>
+        <div class="w-full md:w-1/3">
+          <SearchInput
+            :disabled="!currentPath"
+            @search="handleSearch" />
+        </div>
       </div>
 
       <div
@@ -104,17 +123,7 @@
             <div
               v-else
               class="w-full h-full flex items-center justify-center text-gray-400">
-              <svg
-                class="w-12 h-12"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+              <i class="bi bi-collection-play text-5xl"/>
             </div>
             <div class="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">{{ playlist.videoCount }} videos</div>
           </div>

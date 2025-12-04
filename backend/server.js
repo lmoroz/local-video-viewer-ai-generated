@@ -12,7 +12,7 @@ app.use(express.json());
 // Helper function to find a file with specific extension in a directory
 async function findFileByExt(dir, basename, extensions) {
   for (const ext of extensions) {
-    const filePath = path.join(dir, `${ basename }${ ext }`);
+    const filePath = path.join(dir, `${basename}${ext}`);
     if (await fs.pathExists(filePath)) {
       return filePath;
     }
@@ -33,7 +33,7 @@ async function findFileByPrefix(dir, prefix, extensions) {
       }
     }
   } catch (err) {
-    console.error(`Error scanning directory ${ dir }:`, err);
+    console.error(`Error scanning directory ${dir}:`, err);
   }
   return null;
 }
@@ -46,14 +46,14 @@ function extractId(filename) {
 
 // GET /api/playlists
 app.get('/api/playlists', async (req, res) => {
-  const {dir} = req.query;
+  const { dir } = req.query;
 
   if (!dir || typeof dir !== 'string') {
-    return res.status(400).json({error: 'Missing or invalid "dir" query parameter'});
+    return res.status(400).json({ error: 'Missing or invalid "dir" query parameter' });
   }
 
   if (!(await fs.pathExists(dir))) {
-    return res.status(404).json({error: 'Directory not found'});
+    return res.status(404).json({ error: 'Directory not found' });
   }
 
   try {
@@ -89,7 +89,7 @@ app.get('/api/playlists', async (req, res) => {
               title = infoData.title;
             }
           } catch (e) {
-            console.error(`Error reading info.json for ${ item }:`, e);
+            console.error(`Error reading info.json for ${item}:`, e);
           }
 
           // Find cover image matching the info file basename
@@ -141,17 +141,17 @@ app.get('/api/playlists', async (req, res) => {
     res.json(playlists);
   } catch (err) {
     console.error(err);
-    res.status(500).json({error: 'Internal server error'});
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // GET /api/playlist/:id
 app.get('/api/playlist/:id', async (req, res) => {
-  const {dir} = req.query;
-  const {id} = req.params;
+  const { dir } = req.query;
+  const { id } = req.params;
 
   if (!dir || typeof dir !== 'string') {
-    return res.status(400).json({error: 'Missing or invalid "dir" query parameter'});
+    return res.status(400).json({ error: 'Missing or invalid "dir" query parameter' });
   }
 
   try {
@@ -176,7 +176,7 @@ app.get('/api/playlist/:id', async (req, res) => {
     }
 
     if (!playlistPath) {
-      return res.status(404).json({error: 'Playlist not found'});
+      return res.status(404).json({ error: 'Playlist not found' });
     }
 
     const files = await fs.readdir(playlistPath);
@@ -192,7 +192,7 @@ app.get('/api/playlist/:id', async (req, res) => {
           title = infoData.title;
         }
       } catch (e) {
-        console.error(`Error reading info.json for ${ item }:`, e);
+        console.error(`Error reading info.json for ${item}:`, e);
       }
     }
     for (const file of files) {
@@ -211,7 +211,7 @@ app.get('/api/playlist/:id', async (req, res) => {
           try {
             metadata = await fs.readJson(path.join(playlistPath, infoFile));
           } catch (e) {
-            console.error(`Error reading info for ${ file }:`, e);
+            console.error(`Error reading info for ${file}:`, e);
           }
         }
 
@@ -250,16 +250,16 @@ app.get('/api/playlist/:id', async (req, res) => {
       }
     }
 
-    res.json({videos, title});
+    res.json({ videos, title });
   } catch (err) {
     console.error(err);
-    res.status(500).json({error: 'Internal server error'});
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // GET /api/file
 app.get('/api/file', (req, res) => {
-  const {path: filePath} = req.query;
+  const { path: filePath } = req.query;
 
   if (!filePath || typeof filePath !== 'string') {
     return res.status(400).send('Missing path');
@@ -272,6 +272,108 @@ app.get('/api/file', (req, res) => {
   res.sendFile(filePath);
 });
 
+// GET /api/search
+app.get('/api/search', async (req, res) => {
+  const { dir, query } = req.query;
+
+  if (!dir || typeof dir !== 'string') {
+    return res.status(400).json({ error: 'Missing or invalid "dir" query parameter' });
+  }
+
+  if (!query || typeof query !== 'string') {
+    return res.status(400).json({ error: 'Missing or invalid "query" query parameter' });
+  }
+
+  if (!(await fs.pathExists(dir))) {
+    return res.status(404).json({ error: 'Directory not found' });
+  }
+
+  try {
+    const results = [];
+    const videoExtensions = ['.mp4', '.mkv', '.webm'];
+
+    // Recursive function to scan directories
+    async function scanDir(currentDir) {
+      const items = await fs.readdir(currentDir);
+
+      for (const item of items) {
+        const itemPath = path.join(currentDir, item);
+        const stat = await fs.stat(itemPath);
+
+        if (stat.isDirectory()) {
+          await scanDir(itemPath);
+        } else {
+          const ext = path.extname(item).toLowerCase();
+          if (videoExtensions.includes(ext)) {
+            // Check if filename matches query (case-insensitive)
+            if (item.toLowerCase().includes(query.toLowerCase())) {
+              const basename = path.basename(item, ext);
+              const infoFile = basename + '.info.json';
+              const descFile = basename + '.description';
+              const dirName = path.dirname(itemPath);
+              const playlistName = path.basename(dirName);
+
+              // Find playlist ID if possible (from 000 - ... [id] ... file in the same dir)
+              let playlistId = null;
+              try {
+                const dirFiles = await fs.readdir(dirName);
+                const zeroFile = dirFiles.find(f => f.startsWith('000 - '));
+                if (zeroFile) {
+                  playlistId = extractId(zeroFile);
+                }
+              } catch (e) {
+                // ignore
+              }
+
+              let metadata = {};
+              let thumbnail = null;
+
+              // Read metadata
+              if (await fs.pathExists(path.join(dirName, infoFile))) {
+                try {
+                  metadata = await fs.readJson(path.join(dirName, infoFile));
+                } catch (e) {
+                  console.error(`Error reading info for ${item}:`, e);
+                }
+              }
+
+              // Find thumbnail
+              const imgExtensions = ['.webp', '.jpg', '.jpeg', '.png'];
+              for (const imgExt of imgExtensions) {
+                const thumbPath = path.join(dirName, basename + imgExt);
+                if (await fs.pathExists(thumbPath)) {
+                  thumbnail = thumbPath;
+                  break;
+                }
+              }
+
+              results.push({
+                id: extractId(item),
+                filename: item,
+                title: metadata.fulltitle || item,
+                uploader: metadata.uploader,
+                upload_date: metadata.upload_date,
+                duration: metadata.duration,
+                thumbnail,
+                path: itemPath,
+                playlistId,
+                playlistName
+              });
+            }
+          }
+        }
+      }
+    }
+
+    await scanDir(dir);
+    res.json(results);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${ PORT }`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });

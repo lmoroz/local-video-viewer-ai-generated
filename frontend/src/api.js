@@ -14,6 +14,9 @@ export default {
     getPlaylistDetails(id, dir) {
         return apiClient.get(`/playlist/${encodeURIComponent(id)}`, { params: { dir } });
     },
+    searchVideos(query, dir) {
+        return apiClient.get('/search', { params: { query, dir } });
+    },
     getFileUrl(path) {
         if (!path) return '';
         return `http://localhost:3000/api/file?path=${encodeURIComponent(path)}`;
