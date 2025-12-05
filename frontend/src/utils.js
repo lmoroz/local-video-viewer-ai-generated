@@ -13,4 +13,19 @@ const formatDuration = seconds => {
   return `${s.toString().padStart(2, '0')}с`
 }
 
-export { formatDuration }
+const trimText = (text, len = 55) => {
+  return text.length > len ? text.slice(0, len - 1) + ' …' : text
+}
+
+const formatDescription = text => {
+  if (!text) return ''
+  const matches = text.match(/(https?:\/\/\S+)/g)
+  if (!matches) return text
+  Array.from(matches).forEach(linkUrl => {
+    const linkText = trimText(linkUrl)
+    text = text.replace(linkUrl, `<a href="${linkUrl}" target="_blank" rel="noopener" class="text-blue-700">${linkText}</a>`)
+  })
+  return text.replace(/\n/g, '<br>')
+}
+
+export { formatDuration, formatDescription }

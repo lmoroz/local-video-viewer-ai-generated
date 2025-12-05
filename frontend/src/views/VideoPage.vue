@@ -5,7 +5,7 @@
   import 'video.js/dist/video-js.css'
   import api from '../api'
   import SearchInput from '../components/SearchInput.vue'
-  import { formatDuration } from '../utils.js'
+  import { formatDescription, formatDuration } from '../utils.js'
 
   const props = defineProps({
     videoId: String,
@@ -517,9 +517,9 @@
               {{ formatDate(videoData?.upload_date) }}
             </span>
           </div>
-          <div class="prose prose-invert max-w-none whitespace-pre-wrap text-gray-300">
-            {{ videoData?.description }}
-          </div>
+          <div
+            class="prose prose-invert max-w-none text-gray-300"
+            v-html="formatDescription(videoData?.description)" />
         </div>
       </div>
 
@@ -553,7 +553,7 @@
 
         <!-- Playlist Sidebar (Fixed Right, below chapters or standalone) -->
         <div
-          class="playlist-sidebar lg:w-96 bg-linear-to-b from-gray-900/95 to-transparent border border-gray-600 overflow-hidden flex-shrink-0 custom-scrollbar rounded-xl flex flex-col"
+          class="chapters lg:w-96 bg-linear-to-b from-gray-900/95 to-transparent border border-gray-600 overflow-hidden flex-shrink-0 custom-scrollbar rounded-xl flex flex-col"
           :class="{ 'mt-4': chapters && chapters.length > 0 && chaptersVisible }">
           <div class="p-4 border-b border-gray-700 font-semibold bg-gray-900/95 flex items-center justify-between sticky top-0 z-10">
             <span>Playlist</span>
