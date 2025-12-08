@@ -1,8 +1,8 @@
 <script setup>
-  import { ref, onMounted, watchEffect } from 'vue'
+  import { ref, watch, onMounted } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import api from '../api'
-  import SearchInput from '../components/SearchInput.vue'
+  import { formatDuration } from '../utils'
 
   const router = useRouter()
   const route = useRoute()
@@ -27,6 +27,7 @@
 
       // Update URL without reloading
       router.replace({ query: { ...route.query, dir: path } })
+      localStorage.setItem('last-folder-path', path)
     } catch (err) {
       console.error(err)
       error.value = err.response?.data?.error || 'Failed to load playlists'
@@ -46,25 +47,18 @@
     })
   }
 
-  const formatDuration = seconds => {
-    if (!seconds) return '0s'
-    const h = Math.floor(seconds / 3600)
-    const m = Math.floor((seconds % 3600) / 60)
-    const s = Math.floor(seconds % 60)
-
-    if (h > 0) return `${h}h ${m}m`
-    if (m > 0) return `${m}m ${s}s`
-    return `${s}s`
-  }
-
-  watchEffect(() => {
-    // Restore path from query or local storage if needed,
-    // but usually we start empty or from previous session if we want.
-    // For now, let's check if query has dir
-    if (route.query.dir) {
-      currentPath.value = route.query.dir
+  watch(
+    () => currentPath.value,
+    () => {
       loadPlaylists(currentPath.value)
+
+      router.replace({ query: { ...route.query, dir: savedPath } })
     }
+  )
+
+  onMounted(() => {
+    const savedPath = localStorage.getItem('last-folder-path')
+    if (savedPath) currentPath.value = savedPath
   })
 </script>
 
@@ -123,7 +117,7 @@
             <div
               v-else
               class="w-full h-full flex items-center justify-center text-gray-400">
-              <i class="bi bi-collection-play text-5xl"/>
+              <i class="bi bi-collection-play text-5xl" />
             </div>
             <div class="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">{{ playlist.videoCount }} videos</div>
           </div>
