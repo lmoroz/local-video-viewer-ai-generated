@@ -18,6 +18,11 @@ async function build() {
     console.log('Copying frontend build to backend...');
     await fs.copy(frontendSrc, frontendDest);
 
+    console.log('Copying icon...');
+    const iconSrc = path.join(__dirname, '../frontend/public/app_icon.png');
+    const iconDest = path.join(__dirname, 'icon.png');
+    await fs.copy(iconSrc, iconDest);
+
     console.log('Building Electron app...');
     try {
         execSync('npx electron-builder', { stdio: 'inherit' });

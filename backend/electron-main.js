@@ -11,7 +11,7 @@ async function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1280,
         height: 800,
-        icon: path.join(__dirname, '../frontend/public/app_icon.png'),
+        icon: path.join(__dirname, 'icon.png'),
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
