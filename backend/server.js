@@ -374,6 +374,37 @@ app.get('/api/search', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+// Serve static files from local frontend-dist directory (copied during build)
+const frontendPath = path.join(__dirname, 'frontend-dist');
+app.use(express.static(frontendPath));
+
+// Handle SPA routing by returning index.html for unknown routes
+app.get('*', (req, res) => {
+  // Check if it's an API request
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  const indexPath = path.join(frontendPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send(`Frontend build not found at ${indexPath}. Please ensure build-installer.js ran successfully.`);
+  }
 });
+
+function startServer(port = 0) {
+  return new Promise((resolve, reject) => {
+    const server = app.listen(port, () => {
+      const address = server.address();
+      console.log(`Server running on http://localhost:${address.port}`);
+      resolve(address.port);
+    });
+    server.on('error', reject);
+  });
+}
+
+if (require.main === module) {
+  startServer(PORT);
+}
+
+module.exports = { app, startServer };
