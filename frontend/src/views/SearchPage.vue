@@ -1,8 +1,8 @@
 <script setup>
-  import { ref, onMounted, watch } from 'vue'
+  import { ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
-  import api from '../api'
-  import SearchInput from '../components/SearchInput.vue'
+  import api from '@/api'
+  import SearchInput from '@/components/SearchInput.vue'
 
   const route = useRoute()
   const router = useRouter()
@@ -84,7 +84,7 @@
           :to="{ name: 'Home', query: { dir: dir } }"
           class="p-2 rounded-full hover:bg-gray-700 transition-colors group"
           title="Back to Home">
-          <i class="bi bi-arrow-left text-xl text-gray-400 group-hover:text-white transition-colors"></i>
+          <i class="bi bi-arrow-left text-xl text-gray-400 group-hover:text-white transition-colors"/>
         </router-link>
         <div class="flex-1 flex items-center justify-between">
           <h1 class="text-xl font-bold text-white truncate mr-4">Search Results</h1>
@@ -138,7 +138,7 @@
             <div
               v-else
               class="w-full h-full flex items-center justify-center text-gray-400">
-              <i class="bi bi-play-circle text-3xl"></i>
+              <i class="bi bi-play-circle text-3xl"/>
             </div>
             <div class="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-mono">
               {{ formatDuration(video.duration) }}
@@ -151,20 +151,20 @@
               {{ video.title }}
             </h3>
             <div class="text-sm text-gray-400 mb-1 flex items-center gap-2">
-              <i class="bi bi-folder"></i>
+              <i class="bi bi-folder"/>
               <span class="truncate">{{ video.playlistName }}</span>
             </div>
             <div class="flex items-center gap-3 text-sm text-gray-500">
               <span
                 v-if="video.uploader"
                 class="flex items-center gap-1 truncate">
-                <i class="bi bi-person"></i>
+                <i class="bi bi-person"/>
                 {{ video.uploader }}
               </span>
               <span
                 v-if="video.upload_date"
                 class="flex items-center gap-1">
-                <i class="bi bi-calendar"></i>
+                <i class="bi bi-calendar"/>
                 {{ formatDate(video.upload_date) }}
               </span>
             </div>

@@ -1,7 +1,8 @@
 <script setup>
-  import { ref, computed, watch, nextTick } from 'vue'
+  import { ref, computed, watch } from 'vue'
   import { useRouter } from 'vue-router'
-  import api from '../api'
+  import api from '@/api'
+  import { settings, videoProgress } from '@/composables/useSettings'
 
   const props = defineProps({
     videoId: String,
@@ -30,15 +31,13 @@
 
   // Playlist Logic
   const playlistVideos = ref([])
-  // Initialize autoPlay from localStorage
-  const autoPlay = ref(localStorage.getItem('playlist-autoplay') === 'true')
+  // Initialize autoPlay from settings
+  const autoPlay = computed({
+    get: () => settings.value.autoPlay,
+    set: val => (settings.value.autoPlay = val)
+  })
   const isShuffled = ref(false)
   const shuffledVideos = ref([])
-
-  // Watch autoPlay to persist changes
-  watch(autoPlay, newValue => {
-    localStorage.setItem('playlist-autoplay', newValue)
-  })
 
   const displayVideos = computed(() => {
     return isShuffled.value ? shuffledVideos.value : playlistVideos.value
@@ -56,7 +55,8 @@
   }
 
   const handleVideoEnd = () => {
-    localStorage.removeItem(`video-progress-${props.videoId}`)
+    const id = props.videoId
+    delete videoProgress.value[id]
     if (autoPlay.value) {
       const nextIndex = currentVideoIndex.value + 1
       if (nextIndex < displayVideos.value.length) {
@@ -76,11 +76,9 @@
     try {
       const response = await api.getPlaylistDetails(props.playlistId, props.dir)
       playlistVideos.value = response.data.videos.map((v, i) => {
-        const savedProgress = localStorage.getItem(`video-progress-${v.id || v.filename}`)
         return {
           ...v,
-          originalIndex: i,
-          progress: savedProgress ? parseFloat(savedProgress) : 0
+          originalIndex: i
         }
       })
       playlistTitle.value = response.data.title || props.playlistId

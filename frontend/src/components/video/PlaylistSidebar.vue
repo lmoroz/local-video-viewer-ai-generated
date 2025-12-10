@@ -1,7 +1,8 @@
 <script setup>
   import { ref } from 'vue'
-  import api from '../../api'
-  import { formatDuration, formatDate } from '../../utils.js'
+  import api from '@/api'
+  import { formatDuration, formatDate } from '@/utils.js'
+  import { videoProgress } from '@/composables/useSettings'
 
   defineProps({
     videos: {
@@ -85,9 +86,9 @@
             <i class="bi bi-play-circle" />
           </div>
           <div
-            v-if="video.progress > 0 && video.duration > 0"
+            v-if="videoProgress[video.id] && video.duration > 0"
             class="absolute bottom-0 left-0 h-1 bg-red-600 z-10"
-            :style="{ width: Math.min((video.progress / video.duration) * 100, 100) + '%' }" />
+            :style="{ width: Math.min((videoProgress[video.id] / video.duration) * 100, 100) + '%' }" />
           <div class="absolute bottom-0.5 right-0.5 bg-black/80 text-white text-[10px] px-1 rounded font-mono">
             {{ formatDuration(video.duration) }}
           </div>

@@ -1,5 +1,6 @@
 <script setup>
   import { ref, onMounted, watch } from 'vue'
+  import { settings } from '@/composables/useSettings'
 
   const props = defineProps({
     modelValue: {
@@ -15,9 +16,8 @@
   const history = ref([])
 
   onMounted(() => {
-    const savedHistory = localStorage.getItem('pathHistory')
-    if (savedHistory) {
-      history.value = JSON.parse(savedHistory)
+    if (settings.value.history) {
+      history.value = settings.value.history
     }
   })
 
@@ -49,7 +49,7 @@
     if (history.value.length > 10) {
       history.value.pop()
     }
-    localStorage.setItem('pathHistory', JSON.stringify(history.value))
+    settings.value.history = history.value
   }
 
   const selectHistory = path => {
@@ -59,7 +59,7 @@
 
   const removeFromHistory = index => {
     history.value.splice(index, 1)
-    localStorage.setItem('pathHistory', JSON.stringify(history.value))
+    settings.value.history = history.value
   }
 
   const handleBlur = () => {

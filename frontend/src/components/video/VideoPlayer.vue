@@ -2,8 +2,9 @@
   import { ref, onUnmounted, watch, nextTick } from 'vue'
   import videojs from 'video.js'
   import 'video.js/dist/video-js.css'
-  import api from '../../api'
-  import { formatTime } from '../../utils'
+  import api from '@/api'
+  import { formatTime } from '@/utils'
+  import { settings, videoProgress } from '@/composables/useSettings'
 
   const props = defineProps({
     videoData: {
@@ -38,9 +39,10 @@
   let controlsTimeout = null
 
   const restoreVideoProgress = () => {
-    const savedTime = localStorage.getItem(`video-progress-${props.videoData.id || props.videoData.filename}`)
+    const id = props.videoData.id || props.videoData.filename
+    const savedTime = videoProgress.value[id]
     if (savedTime) {
-      console.log('%c[VideoPlayer] restoreVideoProgress', 'color: yellow', props.videoData.id, savedTime)
+      console.log('%c[VideoPlayer] restoreVideoProgress', 'color: yellow', id, savedTime)
       const time = parseFloat(savedTime)
       const newDuration = player.value.duration()
       // If within 30 seconds of end, start from beginning
@@ -57,14 +59,17 @@
   const playerOnVolumeChange = () => {
     const vol = player.value.volume()
     volume.value = vol
-    localStorage.setItem('video-volume', vol)
+    settings.value.volume = vol
   }
   const playerOnRatechange = () => (playbackRate.value = player.value.playbackRate())
   const playerOnTimeupdate = () => {
     const time = player.value.currentTime()
     currentTime.value = time
     // Save progress
-    if (time > 0) localStorage.setItem(`video-progress-${props.videoData.id}`, time)
+    if (time > 0) {
+      const id = props.videoData.id || props.videoData.filename
+      videoProgress.value[id] = time
+    }
     emit('timeupdate', time)
   }
 
@@ -99,12 +104,14 @@
       })
 
       // Restore volume
-      const savedVolume = localStorage.getItem('video-volume')
-      if (savedVolume !== null) {
-        const vol = parseFloat(savedVolume)
+      if (settings.value.volume !== undefined) {
+        const vol = parseFloat(settings.value.volume)
         player.value.volume(vol)
         volume.value = vol
-      } else volume.value = player.value.volume()
+      } else {
+        volume.value = player.value.volume()
+        settings.value.volume = volume.value
+      }
 
       // Event Listeners
       player.value.on('play', () => {

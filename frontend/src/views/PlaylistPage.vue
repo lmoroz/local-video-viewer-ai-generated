@@ -1,9 +1,10 @@
 <script setup>
   import { ref, computed, onMounted, watch } from 'vue'
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
-  import api from '../api'
-  import SearchInput from '../components/SearchInput.vue'
-  import { formatDuration, formatDate } from '../utils.js'
+  import api from '@/api'
+  import SearchInput from '@/components/SearchInput.vue'
+  import { formatDuration, formatDate } from '@/utils.js'
+  import { sortingOptions, videoProgress } from '@/composables/useSettings'
 
   const props = defineProps({
     id: String,
@@ -22,7 +23,7 @@
     () => props.id,
     newId => {
       if (!newId) return
-      const saved = localStorage.getItem(`playlist-sort-${newId}`)
+      const saved = sortingOptions.value[newId]
       if (saved) {
         sortBy.value = saved
       } else {
@@ -35,7 +36,9 @@
   // Save sort order
   watch(sortBy, newValue => {
     if (props.id) {
-      localStorage.setItem(`playlist-sort-${props.id}`, newValue)
+      if (props.id) {
+        sortingOptions.value[props.id] = newValue
+      }
     }
   })
 
@@ -66,11 +69,9 @@
       const response = await api.getPlaylistDetails(props.id, props.dir)
 
       videos.value = response.data.videos.map((v, i) => {
-        const savedProgress = localStorage.getItem(`video-progress-${v.id || v.filename}`)
         return {
           ...v,
-          originalIndex: i,
-          progress: savedProgress ? parseFloat(savedProgress) : 0
+          originalIndex: i
         }
       })
       playlistTitle.value = response.data.title || props.id
@@ -216,9 +217,9 @@
                   <i class="bi bi-play-circle text-3xl" />
                 </div>
                 <div
-                  v-if="video.progress > 0 && video.duration > 0"
+                  v-if="videoProgress[video.id] && video.duration > 0"
                   class="absolute bottom-0 left-0 h-1 bg-red-600 z-10"
-                  :style="{ width: Math.min((video.progress / video.duration) * 100, 100) + '%' }" />
+                  :style="{ width: Math.min((videoProgress[video.id] / video.duration) * 100, 100) + '%' }" />
                 <div class="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-mono">
                   {{ formatDuration(video.duration) }}
                 </div>

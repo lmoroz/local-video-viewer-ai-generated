@@ -1,8 +1,9 @@
 <script setup>
   import { ref, watch, onMounted } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
-  import api from '../api'
-  import { formatDuration } from '../utils'
+  import api from '@/api'
+  import { formatDuration } from '@/utils'
+  import { settings } from '@/composables/useSettings'
 
   const router = useRouter()
   const route = useRoute()
@@ -27,7 +28,7 @@
 
       // Update URL without reloading
       router.replace({ query: { ...route.query, dir: path } })
-      localStorage.setItem('last-folder-path', path)
+      settings.value.lastPath = path
     } catch (err) {
       console.error(err)
       error.value = err.response?.data?.error || 'Failed to load playlists'
@@ -57,7 +58,7 @@
   )
 
   onMounted(() => {
-    const savedPath = localStorage.getItem('last-folder-path')
+    const savedPath = settings.value.lastPath
     if (savedPath) currentPath.value = savedPath
   })
 </script>

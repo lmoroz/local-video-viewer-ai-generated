@@ -1,20 +1,20 @@
 <script setup>
-import { formatDescription } from '../../utils.js'
+  import { formatDescription } from '@/utils.js'
 
-const props = defineProps({
-  videoData: {
-    type: Object,
-    required: true
+  const props = defineProps({
+    videoData: {
+      type: Object,
+      required: true
+    }
+  })
+
+  const formatDate = dateStr => {
+    if (!dateStr || dateStr.length !== 8) return dateStr
+    const y = dateStr.substring(0, 4)
+    const m = dateStr.substring(4, 6)
+    const d = dateStr.substring(6, 8)
+    return `${d}.${m}.${y}`
   }
-})
-
-const formatDate = dateStr => {
-  if (!dateStr || dateStr.length !== 8) return dateStr
-  const y = dateStr.substring(0, 4)
-  const m = dateStr.substring(4, 6)
-  const d = dateStr.substring(6, 8)
-  return `${d}.${m}.${y}`
-}
 </script>
 
 <template>
