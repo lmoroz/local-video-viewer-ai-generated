@@ -75,7 +75,14 @@
 
     try {
       const response = await api.getPlaylistDetails(props.playlistId, props.dir)
-      playlistVideos.value = response.data.videos.map((v, i) => ({ ...v, originalIndex: i }))
+      playlistVideos.value = response.data.videos.map((v, i) => {
+        const savedProgress = localStorage.getItem(`video-progress-${v.id || v.filename}`)
+        return {
+          ...v,
+          originalIndex: i,
+          progress: savedProgress ? parseFloat(savedProgress) : 0
+        }
+      })
       playlistTitle.value = response.data.title || props.playlistId
 
       const found = playlistVideos.value.find(v => v.id === props.videoId || v.filename === props.videoId)
