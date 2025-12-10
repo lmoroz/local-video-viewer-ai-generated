@@ -46,6 +46,78 @@
 #### Примерный вид страницы просмотра видеоролика:
 ![Примерный вид страницы просмотра видеоролика](Pasted image 20251202103441.png)
 
-**References:**
-https://videojs.org/guides
+**References:**  
+https://videojs.org/guides  
 https://docs.videojs.com/chaptersbutton
+
+## Итоговый результат
+![img_5.png](img_5.png)
+
+## Запуск и Сборка
+
+### Предварительные требования
+- Node.js (рекомендуется версия lts)
+- Установленные зависимости в папках `local-video-viewer-ai-generated/backend` и `local-video-viewer-ai-generated/frontend`
+
+```bash
+# Установка зависимостей
+cd frontend
+npm install
+
+cd ../backend
+npm install
+```
+
+### Режим разработки (Development)
+
+Для разработки рекомендуется запускать backend и frontend отдельно для работы Hot Module Replacement (HMR).
+
+1. **Запуск Backend (API Server)**
+   ```bash
+   cd backend
+   npm start
+   # Сервер будет запущен на http://localhost:3000
+   ```
+
+2. **Запуск Frontend (Vite Dev Server)**
+   ```bash
+   cd frontend
+   npm run dev
+   # Приложение будет доступно по ссылке в терминале (обычно http://localhost:5173)
+   ```
+
+### Запуск в режиме Electron (Dev)
+
+Если требуется проверить работу именно внутри Electron окна:
+
+1. Соберите фронтенд (так как electron-main.js загружает статику или http://localhost:3000 который раздает статику в текущей конфигурации):
+   ```bash
+   cd frontend
+   npm run build
+   ```
+
+2. Запустите Electron из папки backend:
+   ```bash
+   cd backend
+   npm run electron:dev
+   ```
+
+### Сборка приложения (Production Build)
+
+Чтобы создать установочный файл (exe/installer):
+
+1. **Сборка Frontend**
+   ```bash
+   cd frontend
+   npm run build
+   ```
+   Это создаст папку `dist` внутри `frontend`.  
+   
+   
+2. **Сборка Backend и инсталлера**
+   ```bash
+   cd backend
+   npm run dist
+   ```
+   Установочный файл появится в папке `backend/dist`.
+
