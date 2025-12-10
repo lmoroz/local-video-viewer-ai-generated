@@ -65,7 +65,14 @@
     try {
       const response = await api.getPlaylistDetails(props.id, props.dir)
 
-      videos.value = response.data.videos.map((v, i) => ({ ...v, originalIndex: i }))
+      videos.value = response.data.videos.map((v, i) => {
+        const savedProgress = localStorage.getItem(`video-progress-${v.id || v.filename}`)
+        return {
+          ...v,
+          originalIndex: i,
+          progress: savedProgress ? parseFloat(savedProgress) : 0
+        }
+      })
       playlistTitle.value = response.data.title || props.id
 
       document.title = playlistTitle.value
@@ -208,6 +215,10 @@
                   class="w-full h-full flex items-center justify-center text-gray-400">
                   <i class="bi bi-play-circle text-3xl" />
                 </div>
+                <div
+                  v-if="video.progress > 0 && video.duration > 0"
+                  class="absolute bottom-0 left-0 h-1 bg-red-600 z-10"
+                  :style="{ width: Math.min((video.progress / video.duration) * 100, 100) + '%' }" />
                 <div class="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-mono">
                   {{ formatDuration(video.duration) }}
                 </div>
