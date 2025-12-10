@@ -39,6 +39,6 @@ coverage
 components.d.ts
 
 patch
-/package-lock.json
+package-lock.json
 
 folder-sample
