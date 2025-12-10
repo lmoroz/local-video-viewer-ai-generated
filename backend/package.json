@@ -12,7 +12,7 @@
     "appId": "com.videoviewer.app",
     "productName": "Video Viewer",
     "directories": {
-      "output": "dist"
+      "output": "../dist"
     },
     "files": [
       "**/*",
