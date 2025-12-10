@@ -52,7 +52,7 @@
     () => {
       loadPlaylists(currentPath.value)
 
-      router.replace({ query: { ...route.query, dir: savedPath } })
+      router.replace({ query: { ...route.query, dir: currentPath.value } })
     }
   )
 

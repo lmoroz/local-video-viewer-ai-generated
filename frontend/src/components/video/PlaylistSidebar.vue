@@ -1,9 +1,9 @@
 <script setup>
   import { ref } from 'vue'
   import api from '../../api'
-  import { formatDuration } from '../../utils.js'
+  import { formatDuration, formatDate } from '../../utils.js'
 
-  const props = defineProps({
+  defineProps({
     videos: {
       type: Array,
       required: true
@@ -95,11 +95,7 @@
             {{ video.title }}
           </div>
           <div class="text-xs text-gray-500 mt-1 flex items-center gap-2">
-            <span
-              v-if="video.uploader"
-              class="truncate max-w-[100px]">
-              {{ video.uploader }}
-            </span>
+            <template v-if="video.uploader || video.upload_date">{{ video.uploader }} | {{ formatDate(video.upload_date) }}</template>
           </div>
         </div>
       </router-link>

@@ -3,7 +3,7 @@
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import api from '../api'
   import SearchInput from '../components/SearchInput.vue'
-  import { formatDuration } from '../utils.js'
+  import { formatDuration, formatDate } from '../utils.js'
 
   const props = defineProps({
     id: String,
@@ -90,14 +90,6 @@
     sessionStorage.setItem(`scroll-pos-${props.id}`, window.scrollY)
     next()
   })
-
-  const formatDate = dateStr => {
-    if (!dateStr || dateStr.length !== 8) return dateStr
-    const y = dateStr.substring(0, 4)
-    const m = dateStr.substring(4, 6)
-    const d = dateStr.substring(6, 8)
-    return `${d}.${m}.${y}`
-  }
 
   const handleSearch = query => {
     if (!query.trim()) return

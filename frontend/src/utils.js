@@ -42,4 +42,12 @@ const formatTime = seconds => {
   return `0:${s.toString().padStart(2, '0')}`
 }
 
-export { formatDuration, formatDescription, formatTime }
+const formatDate = dateStr => {
+  if (!dateStr || dateStr.length !== 8) return dateStr
+  const y = dateStr.substring(0, 4)
+  const m = dateStr.substring(4, 6)
+  const d = dateStr.substring(6, 8)
+  return `${d}.${m}.${y}`
+}
+
+export { formatDuration, formatDescription, formatTime, formatDate }
