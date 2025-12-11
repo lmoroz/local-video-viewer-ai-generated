@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import HomePage from '@/views/HomePage.vue'
 import PlaylistPage from '@/views/PlaylistPage.vue'
 import VideoPage from '@/views/VideoPage.vue'
@@ -33,7 +33,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
     if (to.hash) {

@@ -78,11 +78,12 @@ app.get('/api/playlists', async (req, res) => {
 
         // Find any file starting with "000 - " to extract ID
         const zeroFile = files.find(f => f.startsWith('000 - '));
-        if (zeroFile) id = extractId(zeroFile);
+        if (!zeroFile) continue;
 
         if (infoFile) {
           try {
             const infoData = await fs.readJson(path.join(itemPath, infoFile));
+            if (infoData.id) id = infoData.id;
             if (infoData.title) title = infoData.title;
           } catch (e) {
             console.error(`Error reading info.json for ${ item }:`, e);
@@ -169,9 +170,7 @@ app.get('/api/playlist/:id', async (req, res) => {
       }
     }
 
-    if (!playlistPath) {
-      return res.status(404).json({error: 'Playlist not found'});
-    }
+    if (!playlistPath) return res.status(404).json({error: 'Playlist not found'});
 
     const files = await fs.readdir(playlistPath);
     const videos = [];
@@ -228,7 +227,7 @@ app.get('/api/playlist/:id', async (req, res) => {
         }
 
         videos.push({
-          id: extractId(file), // Extract video ID
+          id: metadata.id, // Extract video ID
           filename: file,
           title: metadata.fulltitle || file,
           uploader: metadata.uploader,
@@ -304,7 +303,7 @@ app.get('/api/search', async (req, res) => {
             if (item.toLowerCase().includes(query.toLowerCase())) {
               const basename = path.basename(item, ext);
               const infoFile = basename + '.info.json';
-              const descFile = basename + '.description';
+              //const descFile = basename + '.description';
               const dirName = path.dirname(itemPath);
               const playlistName = path.basename(dirName);
 
@@ -399,8 +398,6 @@ function startServer(port = 0) {
   });
 }
 
-if (require.main === module) {
-  startServer(PORT);
-}
+if (require.main === module) startServer(PORT);
 
 module.exports = {app, startServer};

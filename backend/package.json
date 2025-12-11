@@ -10,7 +10,7 @@
   },
   "build": {
     "appId": "com.videoviewer.app",
-    "productName": "Video Viewer",
+    "productName": "LocalVideoViewer",
     "directories": {
       "output": "../dist"
     },
