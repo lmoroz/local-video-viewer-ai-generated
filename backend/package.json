@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "electron:dev": "electron .",
-    "dist": "node build-installer.js"
+    "dist": "node build-installer.js",
+    "bundle": "cd ../frontend && npm run build && cd ../backend && node build-installer.js"
   },
   "build": {
     "appId": "com.videoviewer.app",
