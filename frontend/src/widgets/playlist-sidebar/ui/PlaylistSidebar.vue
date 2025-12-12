@@ -1,10 +1,10 @@
 <script setup>
-  import { ref } from 'vue'
+  import { ref, watch, nextTick, onMounted } from 'vue'
   import api from '@/shared/api'
   import { formatDuration, formatDate } from '@/shared/lib/utils.js'
   import { videoProgress } from '@/entities/settings/model/useSettings'
 
-  defineProps({
+  const props = defineProps({
     videos: {
       type: Array,
       required: true
@@ -30,6 +30,7 @@
   const emit = defineEmits(['update:autoPlay', 'shuffle'])
 
   const isShuffled = ref(false)
+  const itemRefs = ref({})
 
   const toggleShuffle = () => {
     isShuffled.value = !isShuffled.value
@@ -39,13 +40,26 @@
   const updateAutoPlay = e => {
     emit('update:autoPlay', e.target.checked)
   }
+
+  // Auto-scroll logic
+  const scrollToActive = async () => {
+    await nextTick()
+    const activeId = String(props.currentVideoId)
+    const el = itemRefs.value[activeId]
+    if (el) {
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    }
+  }
+
+  watch(() => props.currentVideoId, scrollToActive)
+  onMounted(scrollToActive)
 </script>
 
 <template>
   <div
     class="chapters lg:w-96 bg-linear-to-b from-gray-900/95 to-transparent border border-gray-600 overflow-hidden flex-shrink-0 custom-scrollbar rounded-xl flex flex-col">
     <div class="p-4 border-b border-gray-700 font-semibold bg-gray-900/95 flex items-center justify-between sticky top-0 z-10">
-      <span>Playlist</span>
+      <span>Playlist ({{ videos.length }})</span>
       <div class="flex items-center gap-2">
         <button
           @click="toggleShuffle"
@@ -68,13 +82,14 @@
       <router-link
         v-for="video in videos"
         :key="video.originalIndex"
+        :ref="el => { if (el) itemRefs[String(video.id || video.filename)] = el.$el }"
         :to="{
           name: 'Video',
           params: { videoId: video.id || video.filename, playlistId: playlistId },
           query: { dir: dir }
         }"
         class="flex gap-3 p-3 hover:bg-gray-700/50 transition-colors border-b border-gray-700/30 last:border-0 group"
-        :class="{ 'bg-blue-900/20 border-l-2 border-l-blue-500': (video.id || video.filename) === currentVideoId }">
+        :class="{ 'bg-blue-900/20 border-l-2 border-l-blue-500': String(video.id || video.filename) === String(currentVideoId) }">
         <div class="w-24 aspect-video bg-gray-800 rounded overflow-hidden flex-shrink-0 relative">
           <img
             v-if="video.thumbnail"
@@ -96,7 +111,7 @@
         <div class="flex-1 min-w-0 flex flex-col justify-center">
           <div
             class="text-sm font-medium group-hover:text-blue-300 transition-colors"
-            :class="{ 'text-blue-400': (video.id || video.filename) === currentVideoId, 'text-gray-200': (video.id || video.filename) !== currentVideoId }">
+            :class="{ 'text-blue-400': String(video.id || video.filename) === String(currentVideoId), 'text-gray-200': String(video.id || video.filename) !== String(currentVideoId) }">
             {{ video.title }}
           </div>
           <div class="text-xs text-gray-500 mt-1 flex items-center gap-2">
