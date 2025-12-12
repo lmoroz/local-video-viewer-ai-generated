@@ -5,7 +5,7 @@
   "author": "Morozhnikova Larisa",
   "main": "electron-main.js",
   "scripts": {
-    "start": "nodemon server.js",
+    "start": "nodemon --ignore \"cache/**\" server.js",
     "electron:dev": "electron .",
     "dist": "node build-installer.js",
     "bundle": "cd ../frontend && npm run build && cd ../backend && node build-installer.js"
@@ -27,6 +27,7 @@
     }
   },
   "dependencies": {
+    "chokidar": "^5.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^4.18.2",

@@ -106,6 +106,15 @@ class MetadataCache {
       return {};
     }
   }
+
+  remove(filePath) {
+    if (this.cache.delete(filePath)) {
+      this.scheduleSave(); // Сохраняем изменения на диск
+      if (process.env.DEBUG_PERF === 'true') {
+        console.log(`[CACHE] Evicted: ${ path.basename(filePath) }`);
+      }
+    }
+  }
 }
 
 const instance = new MetadataCache();

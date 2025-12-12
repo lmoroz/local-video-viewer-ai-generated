@@ -1,16 +1,66 @@
 const fs = require('fs-extra');
 const path = require('path');
 const pLimit = require('p-limit').default;
+const chokidar = require('chokidar');
 const config = require('../config');
 const metadataCache = require('./metadataCache');
 
 class IndexerService {
   constructor() {
     this.limit = pLimit(50);
+
+    // Состояние для вотчера
+    this.watcher = null;
+    this.currentWatchedDir = null;
+  }
+
+  _setupWatcher(targetDir) {
+    // 1. Если мы уже следим за этой папкой — ничего не делаем
+    if (this.watcher && this.currentWatchedDir === targetDir) return;
+
+    // 2. Если есть старый вотчер на другой папке — убиваем его
+    if (this.watcher) {
+      console.log(`[WATCHER] Stopping watch on: ${ this.currentWatchedDir }`);
+      this.watcher.close();
+      this.watcher = null;
+    }
+
+    // 3. Запускаем новый
+    console.log(`[WATCHER] Starting watch on: ${ targetDir }`);
+    this.currentWatchedDir = targetDir;
+
+    this.watcher = chokidar.watch(targetDir, {
+      ignored: /(^|[\/\\])\../, // Игнорировать скрытые файлы (начинаются с точки)
+      persistent: true,
+      ignoreInitial: true, // Не триггерить события на те файлы, которые уже там есть (мы их и так просканировали)
+      depth: 3, // Не лезть слишком глубоко, если папок очень много
+      awaitWriteFinish: { // Ждать, пока файл запишется полностью
+        stabilityThreshold: 2000,
+        pollInterval: 100,
+      },
+    });
+
+    this.watcher
+      .on('add', (filePath) => this._handleFileChange(filePath, 'add'))
+      .on('change', (filePath) => this._handleFileChange(filePath, 'change'))
+      .on('unlink', (filePath) => this._handleFileChange(filePath, 'unlink'));
+  }
+
+  async _handleFileChange(filePath, event) {
+    // Нас интересуют только JSON
+    const isJson = filePath.endsWith('.info.json');
+    if (!isJson) return;
+
+    if (config.DEBUG_PERF === 'true') console.log(`[WATCHER] File ${ event }: ${ path.basename(filePath) }`);
+
+    if (event === 'unlink') metadataCache.remove(filePath);
+    else if (isJson) await metadataCache.get(filePath);
   }
 
   async scanPlaylists(dirPath) {
     if (!await fs.pathExists(dirPath)) throw new Error('Directory not found');
+
+    this._setupWatcher(dirPath);
 
     const items = await fs.readdir(dirPath);
 
@@ -86,6 +136,8 @@ class IndexerService {
   }
 
   async scanPlaylistVideos(dirPath, playlistId) {
+    this._setupWatcher(dirPath);
+
     const items = await fs.readdir(dirPath);
     let playlistPath = null;
 
@@ -170,6 +222,8 @@ class IndexerService {
 
   async scanAllVideos(rootDir) {
     if (!await fs.pathExists(rootDir)) throw new Error('Directory not found');
+
+    this._setupWatcher(rootDir);
 
     const results = [];
 

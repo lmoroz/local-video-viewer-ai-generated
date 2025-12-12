@@ -35,6 +35,17 @@ app.get('*', (req, res) => {
   }
 });
 
-app.listen(config.PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${ config.PORT }`);
-});
+function startServer(port = 0) {
+  return new Promise((resolve, reject) => {
+    const server = app.listen(port, () => {
+      const address = server.address();
+      console.log(`🚀 Server running on http://localhost:${ address.port }`);
+      resolve(address.port);
+    });
+    server.on('error', reject);
+  });
+}
+
+if (require.main === module) startServer(config.PORT);
+
+module.exports = {app, startServer};
