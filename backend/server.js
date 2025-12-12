@@ -229,7 +229,7 @@ app.get('/api/playlist/:id', async (req, res) => {
         videos.push({
           id: metadata.id, // Extract video ID
           filename: file,
-          title: metadata.fulltitle || file,
+          title: metadata.fulltitle || metadata.title || file,
           uploader: metadata.uploader,
           uploader_url: metadata.uploader_url,
           channel_url: metadata.channel_url,
@@ -336,7 +336,7 @@ app.get('/api/videos', async (req, res) => {
             results.push({
               id: extractId(item) || metadata.id, // Try filename ID first, then metadata
               filename: item,
-              title: metadata.fulltitle || item,
+              title: metadata.fulltitle || metadata.title || item,
               uploader: metadata.uploader,
               upload_date: metadata.upload_date, // Format: YYYYMMDD usually
               duration: metadata.duration,
@@ -453,7 +453,7 @@ app.get('/api/search', async (req, res) => {
               results.push({
                 id: extractId(item),
                 filename: item,
-                title: metadata.fulltitle || item,
+                title: metadata.fulltitle || metadata.title || item,
                 uploader: metadata.uploader,
                 upload_date: metadata.upload_date,
                 duration: metadata.duration,
