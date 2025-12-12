@@ -39,4 +39,5 @@ coverage
 components.d.ts
 
 patch
-package-lock.json
+frontend/package-lock.json
+backend/package-lock.json
