@@ -12,7 +12,7 @@ app.use(express.json());
 // Helper function to find a file with specific extension in a directory
 async function findFileByExt(dir, basename, extensions) {
   for (const ext of extensions) {
-    const filePath = path.join(dir, `${basename}${ext}`);
+    const filePath = path.join(dir, `${ basename }${ ext }`);
     if (await fs.pathExists(filePath)) {
       return filePath;
     }
@@ -33,7 +33,7 @@ async function findFileByPrefix(dir, prefix, extensions) {
       }
     }
   } catch (err) {
-    console.error(`Error scanning directory ${dir}:`, err);
+    console.error(`Error scanning directory ${ dir }:`, err);
   }
   return null;
 }
@@ -46,14 +46,14 @@ function extractId(filename) {
 
 // GET /api/playlists
 app.get('/api/playlists', async (req, res) => {
-  const { dir } = req.query;
+  const {dir} = req.query;
 
   if (!dir || typeof dir !== 'string') {
-    return res.status(400).json({ error: 'Missing or invalid "dir" query parameter' });
+    return res.status(400).json({error: 'Missing or invalid "dir" query parameter'});
   }
 
   if (!(await fs.pathExists(dir))) {
-    return res.status(404).json({ error: 'Directory not found' });
+    return res.status(404).json({error: 'Directory not found'});
   }
 
   try {
@@ -88,7 +88,7 @@ app.get('/api/playlists', async (req, res) => {
             if (infoData.title) title = infoData.title;
             if (infoData.uploader) uploader = infoData.uploader; // Extract uploader
           } catch (e) {
-            console.error(`Error reading info.json for ${item}:`, e);
+            console.error(`Error reading info.json for ${ item }:`, e);
           }
 
           // Find cover image matching the info file basename
@@ -132,7 +132,7 @@ app.get('/api/playlists', async (req, res) => {
           videoCount,
           totalDuration,
           uploader: uploader || 'Unknown',
-          updatedAt: stat.mtimeMs // Use directory modification time
+          updatedAt: stat.mtimeMs, // Use directory modification time
         });
       }
     }
@@ -140,17 +140,17 @@ app.get('/api/playlists', async (req, res) => {
     res.json(playlists);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({error: 'Internal server error'});
   }
 });
 
 // GET /api/playlist/:id
 app.get('/api/playlist/:id', async (req, res) => {
-  const { dir } = req.query;
-  const { id } = req.params;
+  const {dir} = req.query;
+  const {id} = req.params;
 
   if (!dir || typeof dir !== 'string') {
-    return res.status(400).json({ error: 'Missing or invalid "dir" query parameter' });
+    return res.status(400).json({error: 'Missing or invalid "dir" query parameter'});
   }
 
   try {
@@ -174,7 +174,7 @@ app.get('/api/playlist/:id', async (req, res) => {
       }
     }
 
-    if (!playlistPath) return res.status(404).json({ error: 'Playlist not found' });
+    if (!playlistPath) return res.status(404).json({error: 'Playlist not found'});
 
     const files = await fs.readdir(playlistPath);
     const videos = [];
@@ -189,7 +189,7 @@ app.get('/api/playlist/:id', async (req, res) => {
           title = infoData.title;
         }
       } catch (e) {
-        console.error(`Error reading info.json for ${item}:`, e);
+        console.error(`Error reading info.json for ${ item }:`, e);
       }
     }
     for (const file of files) {
@@ -208,7 +208,7 @@ app.get('/api/playlist/:id', async (req, res) => {
           try {
             metadata = await fs.readJson(path.join(playlistPath, infoFile));
           } catch (e) {
-            console.error(`Error reading info for ${file}:`, e);
+            console.error(`Error reading info for ${ file }:`, e);
           }
         }
 
@@ -247,16 +247,16 @@ app.get('/api/playlist/:id', async (req, res) => {
       }
     }
 
-    res.json({ videos, title });
+    res.json({videos, title});
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({error: 'Internal server error'});
   }
 });
 
 // GET /api/file
 app.get('/api/file', (req, res) => {
-  const { path: filePath } = req.query;
+  const {path: filePath} = req.query;
 
   if (!filePath || typeof filePath !== 'string') {
     return res.status(400).send('Missing path');
@@ -271,14 +271,14 @@ app.get('/api/file', (req, res) => {
 
 // GET /api/videos
 app.get('/api/videos', async (req, res) => {
-  const { dir } = req.query;
+  const {dir} = req.query;
 
   if (!dir || typeof dir !== 'string') {
-    return res.status(400).json({ error: 'Missing or invalid "dir" query parameter' });
+    return res.status(400).json({error: 'Missing or invalid "dir" query parameter'});
   }
 
   if (!(await fs.pathExists(dir))) {
-    return res.status(404).json({ error: 'Directory not found' });
+    return res.status(404).json({error: 'Directory not found'});
   }
 
   try {
@@ -295,7 +295,8 @@ app.get('/api/videos', async (req, res) => {
 
         if (stat.isDirectory()) {
           await scanDir(itemPath);
-        } else {
+        }
+        else {
           const ext = path.extname(item).toLowerCase();
           if (videoExtensions.includes(ext)) {
             const basename = path.basename(item, ext);
@@ -323,7 +324,7 @@ app.get('/api/videos', async (req, res) => {
               try {
                 metadata = await fs.readJson(path.join(dirName, infoFile));
               } catch (e) {
-                console.error(`Error reading info for ${item}:`, e);
+                console.error(`Error reading info for ${ item }:`, e);
               }
             }
 
@@ -348,7 +349,7 @@ app.get('/api/videos', async (req, res) => {
               path: itemPath,
               playlistId,
               playlistName,
-              ctime: stat.ctimeMs // Fallback for sorting
+              ctime: stat.ctimeMs, // Fallback for sorting
             });
           }
         }
@@ -366,7 +367,8 @@ app.get('/api/videos', async (req, res) => {
       }
       // Fallback to creation time if no upload date
       if (!dateA && !dateB) return b.ctime - a.ctime;
-      if (dateA) return -1; // A has date, B doesn't -> A comes first (newest?) actually date descending means larger date first. '2023' > '2022'. So B compare A is correct for desc.
+      if (dateA) return -1; // A has date, B doesn't -> A comes first (newest?) actually date descending means larger date first. '2023' > '2022'. So B compare
+                            // A is correct for desc.
       return 1;
     });
 
@@ -374,24 +376,24 @@ app.get('/api/videos', async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({error: 'Internal server error'});
   }
 });
 
 // GET /api/search
 app.get('/api/search', async (req, res) => {
-  const { dir, query } = req.query;
+  const {dir, query} = req.query;
 
   if (!dir || typeof dir !== 'string') {
-    return res.status(400).json({ error: 'Missing or invalid "dir" query parameter' });
+    return res.status(400).json({error: 'Missing or invalid "dir" query parameter'});
   }
 
   if (!query || typeof query !== 'string') {
-    return res.status(400).json({ error: 'Missing or invalid "query" query parameter' });
+    return res.status(400).json({error: 'Missing or invalid "query" query parameter'});
   }
 
   if (!(await fs.pathExists(dir))) {
-    return res.status(404).json({ error: 'Directory not found' });
+    return res.status(404).json({error: 'Directory not found'});
   }
 
   try {
@@ -440,7 +442,7 @@ app.get('/api/search', async (req, res) => {
                 try {
                   metadata = await fs.readJson(path.join(dirName, infoFile));
                 } catch (e) {
-                  console.error(`Error reading info for ${item}:`, e);
+                  console.error(`Error reading info for ${ item }:`, e);
                 }
               }
 
@@ -477,7 +479,7 @@ app.get('/api/search', async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({error: 'Internal server error'});
   }
 });
 
@@ -489,14 +491,14 @@ app.use(express.static(frontendPath));
 app.get('*', (req, res) => {
   // Check if it's an API request
   if (req.path.startsWith('/api')) {
-    return res.status(404).json({ error: 'API endpoint not found' });
+    return res.status(404).json({error: 'API endpoint not found'});
   }
   const indexPath = path.join(frontendPath, 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   }
   else {
-    res.status(404).send(`Frontend build not found at ${indexPath}. Please ensure build-installer.js ran successfully.`);
+    res.status(404).send(`Frontend build not found at ${ indexPath }. Please ensure build-installer.js ran successfully.`);
   }
 });
 
@@ -504,7 +506,7 @@ function startServer(port = 0) {
   return new Promise((resolve, reject) => {
     const server = app.listen(port, () => {
       const address = server.address();
-      console.log(`Server running on http://localhost:${address.port}`);
+      console.log(`Server running on http://localhost:${ address.port }`);
       resolve(address.port);
     });
     server.on('error', reject);
@@ -513,4 +515,5 @@ function startServer(port = 0) {
 
 if (require.main === module) startServer(PORT);
 
-module.exports = { app, startServer };
+module.exports = {app, startServer};
+// restart check

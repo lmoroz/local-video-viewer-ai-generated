@@ -5,10 +5,14 @@ import 'bootstrap-icons/font/bootstrap-icons.min.css'
 import App from '@/app/App.vue'
 import router from '@/app/providers/router'
 
-window.__BACKEND_URL__ = `http://localhost:3000`
+const startApp = () => createApp(App).use(router).mount('#app')
+
 if (window.electronAPI)
   window.electronAPI.onBackendPort(port => {
     window.__BACKEND_URL__ = `http://localhost:${port}`
+    startApp()
   })
-
-createApp(App).use(router).mount('#app')
+else {
+  window.__BACKEND_URL__ = `http://localhost:3000`
+  startApp()
+}

@@ -1,4 +1,4 @@
-const {app, BrowserWindow, protocol, net} = require('electron');
+const {app, BrowserWindow, protocol, net, ipcMain, shell} = require('electron');
 const path = require('path');
 const {startServer} = require('./server');
 const {pathToFileURL} = require('url');
@@ -46,7 +46,7 @@ async function createWindow() {
   // Start the backend server on a fixed port to ensure localStorage persistence
   const port = await startServer();
 
-  mainWindow = new BrowserWindow({
+  const windowConfig = {
     width: 1280,
     height: 800,
     icon: path.join(__dirname, 'icon.png'),
@@ -56,31 +56,40 @@ async function createWindow() {
       contextIsolation: true,
       allowRunningInsecureContent: true,
     },
-  });
+  };
 
-  mainWindow.webContents.setWindowOpenHandler(({url}) => {
-    const {shell} = require('electron');
-    shell.openExternal(url);
-    return {action: 'deny'};
-  });
-
-  mainWindow.loadURL('lmorozlvp://app/index.html');
-
-  mainWindow.webContents.on('did-finish-load', () => {
-    mainWindow.webContents.send('backend-port', port);
-  });
-
-  mainWindow.webContents.on('will-navigate', (event, url) => {
-    if (!url.startsWith('file://')) {
-      event.preventDefault();
+  const registerHandlers = (win) => {
+    win.webContents.setWindowOpenHandler(({url}) => {
       const {shell} = require('electron');
       shell.openExternal(url);
-    }
+      return {action: 'deny'};
+    });
+
+    win.webContents.on('did-finish-load', () => {
+      win.webContents.send('backend-port', port);
+    });
+
+    win.webContents.on('will-navigate', (event, url) => {
+      if (!url.startsWith('file://')) {
+        event.preventDefault();
+        const {shell} = require('electron');
+        shell.openExternal(url);
+      }
+    });
+  };
+
+  mainWindow = new BrowserWindow(windowConfig);
+  ipcMain.on('open-new-window', async (_event, routePath) => {
+    let win = new BrowserWindow(windowConfig);
+
+    registerHandlers(win);
+    await win.loadURL(`lmorozlvp://app/index.html#${ routePath }`);
+    win.on('closed', function() {win = null;});
   });
 
-  mainWindow.on('closed', function() {
-    mainWindow = null;
-  });
+  registerHandlers(mainWindow);
+  await mainWindow.loadURL('lmorozlvp://app/index.html');
+  mainWindow.on('closed', function() {mainWindow = null;});
 }
 
 protocol.registerSchemesAsPrivileged([

@@ -1,3 +1,13 @@
+<script setup>
+  import { onBeforeMount, onBeforeUnmount } from 'vue'
+  import { fadeIn, fadeOut } from '@/shared/lib/animations.js'
+  import useMuddleClickHandler from '@/shared/lib/useMuddleClickHandler.js'
+  import HomeButton from '@/widgets/home-button/ui/HomeButton.vue'
+
+  onBeforeMount(() => document.addEventListener('auxclick', useMuddleClickHandler))
+  onBeforeUnmount(() => document.removeEventListener('auxclick', useMuddleClickHandler))
+</script>
+
 <template>
   <HomeButton />
   <router-view v-slot="{ Component }">
@@ -12,8 +22,3 @@
     </transition>
   </router-view>
 </template>
-
-<script setup>
-  import { fadeIn, fadeOut } from '@/shared/lib/animations.js'
-  import HomeButton from '@/widgets/home-button/ui/HomeButton.vue'
-</script>
