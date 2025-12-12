@@ -1,8 +1,8 @@
 <script setup>
   import { ref, computed, watch } from 'vue'
   import { useRouter } from 'vue-router'
-  import api from '@/api'
-  import { settings, videoProgress } from '@/composables/useSettings'
+  import api from '@/shared/api'
+  import { settings, videoProgress } from '@/entities/settings/model/useSettings'
 
   const props = defineProps({
     videoId: String,

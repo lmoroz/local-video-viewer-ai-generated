@@ -11,5 +11,5 @@
 </template>
 
 <script setup>
-  import { fadeIn, fadeOut } from '@/animations.js'
+  import { fadeIn, fadeOut } from '@/shared/lib/animations.js'
 </script>

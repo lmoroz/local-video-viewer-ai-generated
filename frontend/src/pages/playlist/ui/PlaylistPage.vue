@@ -1,10 +1,10 @@
 <script setup>
   import { ref, computed, onMounted, watch } from 'vue'
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
-  import api from '@/api'
-  import SearchInput from '@/components/SearchInput.vue'
-  import { formatDuration, formatDate } from '@/utils.js'
-  import { sortingOptions, videoProgress } from '@/composables/useSettings'
+  import api from '@/shared/api'
+  import SearchInput from '@/features/search/search-bar/ui/SearchInput.vue'
+  import { formatDuration, formatDate } from '@/shared/lib/utils.js'
+  import { sortingOptions, videoProgress } from '@/entities/settings/model/useSettings'
 
   const props = defineProps({
     id: String,

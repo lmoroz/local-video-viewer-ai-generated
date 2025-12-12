@@ -1,9 +1,9 @@
 import { createApp } from 'vue'
-import '@/assets/css/styles.css'
+import '@/app/assets/css/styles.css'
 import 'bootstrap-icons/font/bootstrap-icons.min.css'
 // https://icons.getbootstrap.com/
-import App from './App.vue'
-import router from './router'
+import App from '@/app/App.vue'
+import router from '@/app/providers/router'
 
 window.__BACKEND_URL__ = `http://localhost:3000`
 if (window.electronAPI)

@@ -4,6 +4,9 @@
 Стек: vite + vue.js 3 + vue-router 4 + eslint + prettier + videojs (https://videojs.org/) + tailwindcss + express.js
 
 ---
+Подробное описание текущего состояния проекта и архитектуры (FSD) доступно в файле [current-stage.md](current-stage.md).
+
+---
 ## Содержание
 - [Исходные данные](#исходные-данные)
 - [Возможности приложения](#возможности-приложения)

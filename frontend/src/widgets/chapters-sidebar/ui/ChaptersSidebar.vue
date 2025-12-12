@@ -1,5 +1,5 @@
 <script setup>
-  import { formatTime } from '@/utils'
+  import { formatTime } from '@/shared/lib/utils.js'
 
   const props = defineProps({
     chapters: {

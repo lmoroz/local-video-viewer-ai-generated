@@ -1,6 +1,6 @@
 <script setup>
   import { ref, onMounted, watch } from 'vue'
-  import { settings } from '@/composables/useSettings'
+  import { settings } from '@/entities/settings/model/useSettings'
 
   const props = defineProps({
     modelValue: {

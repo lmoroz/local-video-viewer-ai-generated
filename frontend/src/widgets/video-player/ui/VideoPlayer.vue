@@ -2,9 +2,9 @@
   import { ref, onUnmounted, watch, nextTick } from 'vue'
   import videojs from 'video.js'
   import 'video.js/dist/video-js.css'
-  import api from '@/api'
-  import { formatTime } from '@/utils'
-  import { settings, videoProgress } from '@/composables/useSettings'
+  import api from '@/shared/api'
+  import { formatTime } from '@/shared/lib/utils.js'
+  import { settings, videoProgress } from '@/entities/settings/model/useSettings'
 
   const props = defineProps({
     videoData: {

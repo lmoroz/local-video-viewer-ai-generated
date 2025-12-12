@@ -1,7 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import HomePage from '@/views/HomePage.vue'
-import PlaylistPage from '@/views/PlaylistPage.vue'
-import VideoPage from '@/views/VideoPage.vue'
+import HomePage from '@/pages/home/ui/HomePage.vue'
+import PlaylistPage from '@/pages/playlist/ui/PlaylistPage.vue'
+import VideoPage from '@/pages/video/ui/VideoPage.vue'
 
 const routes = [
   {
@@ -28,7 +28,7 @@ const routes = [
   {
     path: '/search',
     name: 'Search',
-    component: () => import('../views/SearchPage.vue')
+    component: () => import('@/pages/search/ui/SearchPage.vue')
   }
 ]
 

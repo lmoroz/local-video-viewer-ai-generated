@@ -1,8 +1,8 @@
 <script setup>
   import { ref } from 'vue'
-  import api from '@/api'
-  import { formatDuration, formatDate } from '@/utils.js'
-  import { videoProgress } from '@/composables/useSettings'
+  import api from '@/shared/api'
+  import { formatDuration, formatDate } from '@/shared/lib/utils.js'
+  import { videoProgress } from '@/entities/settings/model/useSettings'
 
   defineProps({
     videos: {

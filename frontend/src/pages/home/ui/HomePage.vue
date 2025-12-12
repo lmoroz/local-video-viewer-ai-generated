@@ -1,9 +1,9 @@
 <script setup>
   import { ref, watch, onMounted } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
-  import api from '@/api'
-  import { formatDuration } from '@/utils'
-  import { settings } from '@/composables/useSettings'
+  import api from '@/shared/api'
+  import { formatDuration } from '@/shared/lib/utils.js'
+  import { settings } from '@/entities/settings/model/useSettings'
 
   const router = useRouter()
   const route = useRoute()

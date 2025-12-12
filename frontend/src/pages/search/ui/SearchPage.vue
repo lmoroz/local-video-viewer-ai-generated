@@ -1,8 +1,8 @@
 <script setup>
   import { ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
-  import api from '@/api'
-  import SearchInput from '@/components/SearchInput.vue'
+  import api from '@/shared/api'
+  import SearchInput from '@/features/search/search-bar/ui/SearchInput.vue'
 
   const route = useRoute()
   const router = useRouter()

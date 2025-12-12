@@ -1,5 +1,5 @@
 <script setup>
-  import { formatDescription } from '@/utils.js'
+  import { formatDescription } from '@/shared/lib/utils.js'
 
   const props = defineProps({
     videoData: {
