@@ -2,9 +2,10 @@
   "name": "video-viewer-backend",
   "version": "1.0.0",
   "description": "Backend for Video Viewer",
+  "author": "Morozhnikova Larisa",
   "main": "electron-main.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "nodemon server.js",
     "electron:dev": "electron .",
     "dist": "node build-installer.js",
     "bundle": "cd ../frontend && npm run build && cd ../backend && node build-installer.js"
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "electron": "^39.2.6",
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.0.12",
+    "nodemon": "^3.1.11"
   }
 }
