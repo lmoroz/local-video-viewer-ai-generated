@@ -23,11 +23,7 @@ const routes = [
       dir: route.query.dir
     })
   },
-  {
-    path: '/search',
-    name: 'Search',
-    component: () => import('@/pages/search/ui/SearchPage.vue')
-  }
+
 ]
 
 const router = createRouter({

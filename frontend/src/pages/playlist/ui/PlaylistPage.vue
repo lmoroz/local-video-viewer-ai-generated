@@ -115,7 +115,7 @@
   <div class="min-h-screen">
     <!-- Fixed Header -->
     <div class="sticky top-0 z-10 backdrop-blur-sm border-b border-gray-800 shadow-md">
-      <div class="max-w-7xl mx-auto px-8 py-4 flex items-center gap-4">
+      <div class="max-w-7xl mx-auto px-8 pl-20 py-4 flex items-center gap-4">
         <router-link
           :to="{ name: 'Home', query: { dir: props.dir } }"
           class="p-2 rounded-full hover:bg-gray-700 transition-colors group"

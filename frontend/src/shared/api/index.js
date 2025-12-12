@@ -15,6 +15,9 @@ export default {
   searchVideos(query, dir) {
     return apiClient.get(`${window.__BACKEND_URL__}/api/search`, { params: { query, dir } })
   },
+  getVideos(dir) {
+    return apiClient.get(`${window.__BACKEND_URL__}/api/videos`, { params: { dir } })
+  },
   getFileUrl(path) {
     if (!path) return ''
     return `${window.__BACKEND_URL__}/api/file?path=${encodeURIComponent(path)}`

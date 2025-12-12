@@ -116,7 +116,7 @@
 <template>
   <div class="min-h-screen text-white">
     <!-- Header -->
-    <div class="sticky top-0 z-20 p-4 flex items-center gap-4 shadow-md bg-[#0f0f0f]">
+    <div class="sticky top-0 z-20 p-4 pl-20 flex items-center gap-4 shadow-md bg-[#0f0f0f]">
       <router-link
         :to="{
           name: 'Playlist',
