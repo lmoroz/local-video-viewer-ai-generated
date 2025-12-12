@@ -16,8 +16,7 @@ Youtube-clone для просмотра локальных видеофайло�
 ### Frontend
 - **Build Tool**: Vite
 - **Framework**: Vue 3 (Script Setup)
-- **State Management**: Pinia
-- **Routing**: Vue Router 4
+- **Routing**: Vue Router 4 (Lazy Loading)
 - **UI/Styling**: TailwindCSS v4, Bootstrap Icons
 - **Video Player**: Video.js + @videojs/http-streaming
 - **Utilities**: axios, @vueuse/core

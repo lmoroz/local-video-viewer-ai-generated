@@ -1,24 +1,22 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import HomePage from '@/pages/home/ui/HomePage.vue'
-import PlaylistPage from '@/pages/playlist/ui/PlaylistPage.vue'
-import VideoPage from '@/pages/video/ui/VideoPage.vue'
+
 
 const routes = [
   {
     path: '/',
     name: 'Home',
-    component: HomePage
+    component: () => import('@/pages/home/ui/HomePage.vue')
   },
   {
     path: '/playlist/:id',
     name: 'Playlist',
-    component: PlaylistPage,
+    component: () => import('@/pages/playlist/ui/PlaylistPage.vue'),
     props: route => ({ id: route.params.id, dir: route.query.dir })
   },
   {
     path: '/video/:playlistId/:videoId',
     name: 'Video',
-    component: VideoPage,
+    component: () => import('@/pages/video/ui/VideoPage.vue'),
     props: route => ({
       videoId: route.params.videoId,
       playlistId: route.params.playlistId,

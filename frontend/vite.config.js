@@ -8,7 +8,16 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig(({ command }) => ({
   base: './',
   build: {
-    target: 'es2018'
+    target: 'es2018',
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'video-player': ['video.js', '@videojs/http-streaming'],
+          'vue-vendor': ['vue', 'vue-router', '@vueuse/core']
+        }
+      }
+    }
   },
   plugins: [
     vue(),
