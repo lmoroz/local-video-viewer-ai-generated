@@ -41,3 +41,4 @@ components.d.ts
 patch
 frontend/package-lock.json
 backend/package-lock.json
+backend/cache/metadata-store.json

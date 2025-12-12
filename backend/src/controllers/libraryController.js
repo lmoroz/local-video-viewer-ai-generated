@@ -1,5 +1,4 @@
 const indexer = require('../services/indexerService');
-const fs = require('fs-extra');
 const path = require('path');
 
 exports.getPlaylists = async (req, res) => {

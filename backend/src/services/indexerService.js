@@ -1,7 +1,8 @@
 const fs = require('fs-extra');
 const path = require('path');
 const pLimit = require('p-limit').default;
-const config = require('../config'); // Импортируем конфиг
+const config = require('../config');
+const metadataCache = require('./metadataCache');
 
 class IndexerService {
   constructor() {
@@ -35,15 +36,14 @@ class IndexerService {
 
       const infoFile = files.find(f => f.startsWith('000 - ') && f.endsWith('.info.json'));
       if (infoFile) {
-        try {
-          const infoData = await fs.readJson(path.join(itemPath, infoFile));
-          id = infoData.id;
-          title = infoData.title || title;
-          uploader = infoData.uploader || uploader;
-        } catch (e) {}
+        // ОПТИМИЗАЦИЯ: используем кэш
+        const infoData = await metadataCache.get(path.join(itemPath, infoFile));
+
+        if (infoData.id) id = infoData.id;
+        if (infoData.title) title = infoData.title;
+        if (infoData.uploader) uploader = infoData.uploader;
 
         const basename = path.basename(infoFile, '.info.json');
-        // ИСПОЛЬЗУЕМ КОНФИГ
         for (const ext of config.SUPPORTED_IMG_EXT) {
           if (files.includes(basename + ext)) {
             coverPath = path.join(itemPath, basename + ext);
@@ -64,10 +64,9 @@ class IndexerService {
         const vBase = path.basename(vFile, path.extname(vFile));
         const vInfo = vBase + '.info.json';
         if (files.includes(vInfo)) {
-          try {
-            const vData = await fs.readJson(path.join(itemPath, vInfo));
-            if (vData.duration) totalDuration += vData.duration;
-          } catch (e) {}
+          // ОПТИМИЗАЦИЯ: используем кэш для подсчета длительности
+          const vData = await metadataCache.get(path.join(itemPath, vInfo));
+          if (vData.duration) totalDuration += vData.duration;
         }
       })));
 
@@ -90,6 +89,7 @@ class IndexerService {
     const items = await fs.readdir(dirPath);
     let playlistPath = null;
 
+    // Быстрый поиск папки
     for (const item of items) {
       const p = path.join(dirPath, item);
       try {
@@ -111,10 +111,9 @@ class IndexerService {
     let playlistTitle = path.basename(playlistPath);
     const plInfoFile = files.find(f => f.startsWith('000 - ') && f.endsWith('.info.json'));
     if (plInfoFile) {
-      try {
-        const d = await fs.readJson(path.join(playlistPath, plInfoFile));
-        if (d.title) playlistTitle = d.title;
-      } catch (e) {}
+      // ОПТИМИЗАЦИЯ: кэш
+      const d = await metadataCache.get(path.join(playlistPath, plInfoFile));
+      if (d.title) playlistTitle = d.title;
     }
 
     const videoPromises = files
@@ -129,10 +128,11 @@ class IndexerService {
         let description = '';
         let thumbnail = null;
 
+        // Параллельный запрос: Metadata (Cache) + Description (FS)
         const [metaDataResult, descResult] = await Promise.all([
-          fs.pathExists(path.join(playlistPath, infoFile)).then(exists =>
-            exists ? fs.readJson(path.join(playlistPath, infoFile)).catch(() => ({})) : {},
-          ),
+          // ОПТИМИЗАЦИЯ: используем кэш
+          files.includes(infoFile) ? metadataCache.get(path.join(playlistPath, infoFile)) : {},
+
           fs.pathExists(path.join(playlistPath, descFile)).then(exists =>
             exists ? fs.readFile(path.join(playlistPath, descFile), 'utf-8').catch(() => '') : '',
           ),
@@ -196,7 +196,7 @@ class IndexerService {
         let playlistId = null;
         let playlistName = path.basename(dir);
         try {
-          const allFiles = await fs.readdir(dir);
+          const allFiles = await fs.readdir(dir); // Имена файлов для поиска ID плейлиста
           const zeroFile = allFiles.find(f => f.startsWith('000 - '));
           if (zeroFile) {
             const match = zeroFile.match(/\[([a-zA-Z0-9_-]+)\]/);
@@ -214,10 +214,14 @@ class IndexerService {
           let thumbnail = null;
 
           const infoPath = path.join(dir, infoFile);
+          // ОПТИМИЗАЦИЯ: кэш. Нам даже не надо проверять fs.exists лишний раз,
+          // так как metadataCache.get внутри делает try/catch.
+          // Но для точности "есть ли файл info.json рядом" проверка `await fs.pathExists` полезна,
+          // хотя можно оптимизировать, проверяя наличие `infoFile` в массиве `allFiles` выше.
           if (await fs.pathExists(infoPath)) {
-            try { metadata = await fs.readJson(infoPath); } catch (e) {}
+            metadata = await metadataCache.get(infoPath);
           }
-          
+
           for (const imgExt of config.SUPPORTED_IMG_EXT) {
             const thumbPath = path.join(dir, basename + imgExt);
             if (await fs.pathExists(thumbPath)) {
