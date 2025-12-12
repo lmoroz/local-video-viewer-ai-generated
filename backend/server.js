@@ -70,6 +70,7 @@ app.get('/api/playlists', async (req, res) => {
         let videoCount = 0;
         let totalDuration = 0;
         let id = null;
+        let uploader = null;
 
         const files = await fs.readdir(itemPath);
 
@@ -85,6 +86,7 @@ app.get('/api/playlists', async (req, res) => {
             const infoData = await fs.readJson(path.join(itemPath, infoFile));
             if (infoData.id) id = infoData.id;
             if (infoData.title) title = infoData.title;
+            if (infoData.uploader) uploader = infoData.uploader; // Extract uploader
           } catch (e) {
             console.error(`Error reading info.json for ${item}:`, e);
           }
@@ -129,6 +131,8 @@ app.get('/api/playlists', async (req, res) => {
           cover: coverPath,
           videoCount,
           totalDuration,
+          uploader: uploader || 'Unknown',
+          updatedAt: stat.mtimeMs // Use directory modification time
         });
       }
     }

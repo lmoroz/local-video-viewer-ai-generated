@@ -53,7 +53,7 @@
         params: { videoId: video.id || video.filename, playlistId: video.playlistId },
         query: { dir: currentPath }
       }"
-      class="bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden cursor-pointer block group">
+      class="bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden cursor-pointer flex flex-col h-full group">
       <!-- Thumbnail -->
       <div class="aspect-video bg-gray-700 relative overflow-hidden">
         <img
@@ -78,11 +78,11 @@
       </div>
 
       <!-- Info -->
-      <div class="p-4">
+      <div class="p-4 flex flex-col flex-grow">
         <h3 class="font-semibold text-white text-lg mb-2 group-hover:text-blue-400 transition-colors line-clamp-2" :title="video.title">
           {{ video.title }}
         </h3>
-        <div class="text-sm text-gray-400 mb-2 flex items-center gap-2">
+        <div class="text-sm text-gray-400 mb-2 flex items-center gap-2 mt-auto">
           <i class="bi bi-folder-fill"/>
           <span class="truncate" :title="video.playlistName">{{ video.playlistName }}</span>
         </div>

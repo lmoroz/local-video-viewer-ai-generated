@@ -6,7 +6,9 @@
       @leave="fadeOut"
       v-bind:css="false"
       mode="out-in">
-      <component :is="Component" />
+      <keep-alive include="HomePage">
+        <component :is="Component" />
+      </keep-alive>
     </transition>
   </router-view>
 </template>
