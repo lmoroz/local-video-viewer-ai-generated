@@ -91,17 +91,20 @@
     <!-- History Popup -->
     <div
       v-if="showHistory && history.length > 0"
-      class="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+      class="absolute z-9999 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
       <ul>
         <li
           v-for="(item, index) in history"
           :key="index"
-          class="px-4 py-2 text-gray-300 cursor-pointer hover:bg-gray-700 flex justify-between items-center"
-          @mousedown.prevent="selectHistory(item)">
-          <span class="truncate">{{ item }}</span>
+          class="flex text-gray-300 items-center hover:bg-gray-700">
+          <div
+            class="px-4 py-2 cursor-pointer truncate w-100 flex-grow"
+            @mousedown.prevent="selectHistory(item)">
+            {{ item }}
+          </div>
           <button
-            @click.stop="removeFromHistory(index)"
-            class="text-gray-400 hover:text-red-500 ml-2">
+            @click.stop.prevent="removeFromHistory(index)"
+            class="text-gray-400 hover:text-red-500 ml-2 cursor-pointer px-2 hover:bg-gray-600 rounded-sm my-2 me-2">
             &times;
           </button>
         </li>
