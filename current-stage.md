@@ -1,17 +1,20 @@
 # Текущее состояние проекта
 
-## Суть проекта
-Youtube-clone для просмотра локальных видеофайлов. Приложение состоит из backend-сервера (Express/Electron) для чтения файловой системы и frontend-клиента (Vue 3) для отображения интерфейса.
+## Project essence
+A YouTube clone for viewing local video files. The application consists of a backend server (Express/Electron) for reading the file system and a frontend client (Vue 3) for displaying the interface.
 
-## Технологический стек
+## Technology stack
 
 ### Backend
 - **Runtime**: Node.js
 - **Framework**: Express.js
 - **Desktop Wrapper**: Electron
 - **Key Libraries**:
-  - `fs-extra` (работа с файловой системой)
-  - `cors` (настройка CORS)
+    - `fs-extra` (working with the file system)
+    - `cors` (CORS configuration)
+    - `lru-cache` (In-Memory cache)
+    - `p-limit` (concurrency limiter)
+    - `chokidar` (filesystem changes handler)
 
 ### Frontend
 - **Build Tool**: Vite
@@ -22,96 +25,103 @@ Youtube-clone для просмотра локальных видеофайло�
 - **Utilities**: axios, @vueuse/core
 - **Linting**: Eslint, Prettier
 
-## Текущий функционал
-- Просмотр списка плейлистов в выбранной папке.
-- Вкладки на главной странице: Плейлисты, Видео, Поиск.
-- **Расширенная группировка и сортировка**:
-  - Сортировка плейлистов и видео (по дате, автору).
-  - Группировка видео (по дате, автору, **плейлисту**).
-  - Управление сортировкой/группировкой на вкладке Поиска.
-  - Сохранение настроек вида между сессиями.
-- Просмотр общего списка всех видео в папке с сортировкой по дате (используются заголовки из метаданных).
-- Просмотр результатов поиска (интегрирован в главную).
-- Просмотр списка видео в плейлисте (с авто-прокруткой к текущему видео и счетчиком).
-- Просмотр видеороликов (Video.js).
-- Поддержка глав (Chapters).
-- ID-based роутинг.
-- Глобальная кнопка "Домой".
-- Темная тема с **Glassmorphism эффектами** в хедере.
-- Прогресс просмотра видео (Local Storage) с отображением на карточках видео.
-- **Smart Scroll Restoration**: Мгновенный возврат на главную без перезагрузки (KeepAlive).
+## Current functionality
+- View the list of playlists in the selected folder.
+- Tabs on the main page: Playlists, Videos, Search.
+- **Advanced grouping and sorting**:
+    - Sort playlists and videos (by date, author).
+    - Grouping videos (by date, author, **playlist**).
+    - Sorting/grouping control on the Search tab.
+    - Saving view settings between sessions.
+- View a general list of all videos in a folder sorted by date (using metadata titles).
+- View search results (integrated into the main page).
+- View a list of videos in a playlist (with auto-scrolling to the current video and a counter).
+- Viewing videos (Video.js).
+- Support for chapters.
+- ID-based routing.
+- Global “Home” button.
+- Dark theme with **Glassmorphism effects** in the header.
+- Video viewing progress (Local Storage) displayed on video cards.
+- **Smart Scroll Restoration**: Instant return to the home page without reloading (KeepAlive).
 
-## Структура проекта
+## Project Structure
 
-### Файловая структура (Tree)
+### File Tree
 
 ```text
 .
-├── dist/                     # Скомпилированные файлы инсталлера
-├── backend/                  # Серверная часть (Node.js + Electron)
-│   ├── build-installer.js    # Скрипт сборки инсталлера (electron-builder)
-│   ├── electron-main.js      # Точка входа Electron (Main Process)
+├── dist/                     # Compiled app
+├── backend/                  # Backend app part (Node.js + Electron)
+│   ├── cache/                # File cache folder
+│   ├── src/                  # Separated backend logic sources
+│   │   ├── config/           # config folder
+│   │   ├── conntrollers/     # handlers for api controllers
+│   │   ├── routes/           # api routes
+│   │   ├── services/         # index and cache services
+│   │   ├── utils/            # 
+│   ├── build-installer.js    # (electron-builder)
+│   ├── .env                  # Backend environment settings
+│   ├── electron-main.js      # Electron entry point (Main Process)
 │   ├── server.js             # Express сервер (API для работы с файлами)
-│   ├── package.json          # Зависимости бэкенда
-│   └── icon.png              # Иконка приложения
+│   ├── package.json          # Backend dependencies
+│   └── icon.png              # App icon
 │
-├── frontend/                 # Клиентская часть (Vue 3 + Vite)
-│   ├── public/               # Статические ресурсы
-│   ├── src/                  # Исходный код (FSD Architecture)
-│   │   ├── app/              # Инициализация приложения
-│   │   │   ├── assets/       # Глобальные стили и ассеты
-│   │   │   ├── providers/    # Конфигурация провайдеров (router)
-│   │   │   ├── App.vue       # Корневой компонент
-│   │   │   └── main.js       # Точка входа
-│   │   ├── pages/            # Страницы приложения (Flat hierarchy)
-│   │   │   ├── home/         # Выбор папки (ui/HomePage.vue)
-│   │   │   ├── playlist/     # Список видео (ui/PlaylistPage.vue)
-│   │   │   ├── search/       # Результаты поиска (ui/SearchPage.vue)
-│   │   │   └── video/        # Просмотр видео (ui/VideoPage.vue)
-│   │   ├── widgets/          # Самостоятельные UI блоки
-│   │   │   ├── chapters-sidebar/ # Сайдбар глав
-│   │   │   ├── playlist-sidebar/ # Сайдбар плейлиста
-│   │   │   └── video-player/     # Видеоплеер
-│   │   ├── features/         # Функциональные модули
+├── frontend/                 # Frontend app part (Vue 3 + Vite)
+│   ├── public/               # Static resources
+│   ├── src/                  # Sources (FSD Architecture)
+│   │   ├── app/              # app initialization
+│   │   │   ├── assets/       # global styles and assets
+│   │   │   ├── providers/    # providers config (router)
+│   │   │   ├── App.vue       # Rooot component
+│   │   │   └── main.js       # Entry point
+│   │   ├── pages/            # App pages (Flat hierarchy)
+│   │   │   ├── home/         # Select folder, vie playlists list, view all videos sorter or groupped, search results (ui/HomePage.vue)
+│   │   │   ├── playlist/     # Playlist page (ui/PlaylistPage.vue)
+│   │   │   └── video/        # Video view page (ui/VideoPage.vue)
+│   │   ├── widgets/          # Standalone UI blocks
+│   │   │   ├── chapters-sidebar/ # Chapters sidebar
+│   │   │   ├── playlist-sidebar/ # Playlist sidebar
+│   │   │   └── video-player/     # Video player
+│   │   ├── features/         # Functional  modules
 │   │   │   ├── filesystem/   # (PathInput)
 │   │   │   └── search/       # (SearchInput)
-│   │   ├── entities/         # Бизнес-сущности
-│   │   │   ├── settings/     # Модель настроек (useSettings)
-│   │   │   └── video/        # Отображение информации о видео (VideoInfo)
-│   │   ├── shared/           # Общий код
-│   │   │   ├── api/          # API клиент
-│   │   │   └── lib/          # Утилиты (utils.js, animations.js)
-│   │   ├── index.html        # HTML шаблон
-│   │   ├── vite.config.js    # Конфигурация сборщика Vite
-│   │   └── package.json      # Зависимости фронтенда
+│   │   ├── entities/         # Business-entities
+│   │   │   ├── settings/     # Settings model (useSettings)
+│   │   │   └── video/        # Video info and description (VideoInfo)
+│   │   ├── shared/           # Shared entities
+│   │   │   ├── api/          # API-client
+│   │   │   └── lib/          # Utils (utils.js, animations.js, clickhandler)
+│   │   ├── index.html        # HTML template
+│   │   ├── vite.config.js    # Vite config
+│   │   └── package.json      # Frontend dependencies
 │
-├── current-stage.md          # Описание текущего состояния проекта
-├── readme.md                 # Техническое задание и инструкция по запуску
-└── todo.md                   # Список задач
+├── current-stage.md          # Project state
+├── readme.md                 # Technical specifications and launch instructions
+└── todo.md                   # Todo list
 ```
 
-### Назначение основных модулей
+### Purpose of the main modules
 
 #### Backend
-- **`server.js`**: Express приложение. Отвечает за:
-  - Сканирование директорий (`/api/playlists`).
-  - Получение деталей плейлиста (`/api/playlist/:id`).
-  - Стриминг видео файлов (`/api/video`).
-  - Поиск видео (`/api/search`).
-  - CORS конфигурацию для разработке.
-- **`electron-main.js`**: Создает окно приложения. Запускает `server.js` в продакшн режиме или подключается к нему. Управляет жизненным циклом.
+- **`server.js`**: Express application. Responsible for:
+    - Scanning directories (`/api/playlists`).
+    - Retrieving playlist details (`/api/playlist/:id`).
+    - Streaming video files (`/api/video`).
+    - Searching for videos (`/api/search`).
+    - CORS configuration for development.
+- **`electron-main.js`**: Creates the application window. Runs `server.js` in production mode or connects to it. Manages the lifecycle.
 
 #### Frontend (FSD Architecture)
-- **`app`**: Слой инициализации. Содержит глобальные стили, роутер и точку входа.
-- **`pages`**: Плоские слайсы страниц. Собирают виджеты и фичи для отображения конкретных маршрутов (`HomePage`, `VideoPage`, etc).
-- **`widgets`**: Крупные самостоятельные блоки.
-  - **`VideoPlayer`**: Обертка над Video.js с кастомным UI.
-  - **`PlaylistSidebar`**: Сайдбар со списком видео.
-- **`features`**: Конкретные пользовательские сценарии.
-  - **`PathInput`**: Ввод пути к папке с историей.
-  - **`SearchInput`**: Глобальный поиск.
-- **`entities`**: Бизнес-логика и модели данных.
-  - **`useSettings`**: Store на базе `ref`/`reactive` для хранения настроек (громкость, история).
-- **`shared`**: Переиспользуемый инфраструктурный код.
-  - **`api`**: Axios клиент.
-  - **`lib`**: Утилиты форматирования.
+- **`app`**: Initialization layer. Contains global styles, router, and entry point.
+- **`pages`**: Flat page slices. Collect widgets and features to display specific routes (`HomePage`, `VideoPage`, etc).
+- **`widgets`**: Large independent blocks.
+    - **`VideoPlayer`**: Wrapper over Video.js with custom UI.
+    - **`PlaylistSidebar`**: Sidebar with a list of videos.
+- **`features`**: Specific user scenarios.
+    - **`PathInput`**: Entering the path to the history folder.
+    - **`SearchInput`**: Global search.
+- **`entities`**: Business logic and data models.
+    - **`useSettings`**: `ref`/`reactive`-based store for storing settings (volume, history).
+- **`shared`**: Reusable infrastructure code.
+    - **`api`**: Axios client.
+    - **`lib`**: Formatting utilities.

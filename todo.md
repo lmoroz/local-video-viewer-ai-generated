@@ -1,9 +1,9 @@
-# New tasks
+# Project To-Do List
 
-## I. Изучи проект и определись с его назначением и структурой
-## II. составь план выполнения следующих задач:
-
-### IV. Backend, Frontend
-- [x] Надо создать возможность сортировки плейлистов и видео на главной:
-  - Плейлисты: по автору плейлиста, по дате обновления
-  - Видеоролики: по дате добавления: в таком случае весь список видеороликов будет поделен на секции с указание года и месяца, по автору: в таком случае весь список видеороликов будет поделен на секции с именем автора
+## Backend Tasks
+1. **Server Auto-Restart**: Configure the project so that editing `server.js` automatically restarts the server when running `npm run start`.
+2. **Performance Optimization**: The playlist folder is large with many videos.
+   - Profile `server.js` to identify bottlenecks.
+   - specific plan for optimization.
+   - Consider rewriting hot paths as command-line utilities.
+   - Refactor into modules and shared utilities.

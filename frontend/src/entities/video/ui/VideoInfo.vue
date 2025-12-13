@@ -1,5 +1,5 @@
 <script setup>
-  import { formatDescription } from '@/shared/lib/utils.js'
+  import { formatDescription, formatDate } from '@/shared/lib/utils.js'
 
   const props = defineProps({
     videoData: {
@@ -7,14 +7,6 @@
       required: true
     }
   })
-
-  const formatDate = dateStr => {
-    if (!dateStr || dateStr.length !== 8) return dateStr
-    const y = dateStr.substring(0, 4)
-    const m = dateStr.substring(4, 6)
-    const d = dateStr.substring(6, 8)
-    return `${d}.${m}.${y}`
-  }
 </script>
 
 <template>
