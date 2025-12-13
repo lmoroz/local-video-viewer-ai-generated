@@ -10,3 +10,12 @@
 body {
     @apply bg-black text-gray-100;
 }
+
+body:after {
+    content: "";
+    pointer-events: none;
+    z-index: -1;
+    position: fixed;
+    inset: 0;
+    background: url('@/app/assets/images/nano-banana-2-693d4a5dacec79b34ad04267.webp') no-repeat center center/cover;
+}

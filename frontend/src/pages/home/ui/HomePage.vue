@@ -2,7 +2,6 @@
   import { ref, watch, onMounted, computed } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import api from '@/shared/api'
-  import { formatDuration } from '@/shared/lib/utils.js'
 
   import { settings, viewOptions } from '@/entities/settings/model/useSettings'
   import VideoList from '@/widgets/video-list/ui/VideoList.vue'
@@ -36,19 +35,19 @@
   // Sorting and Grouping State (Mapped to persistent settings)
   const playlistSortOption = computed({
     get: () => viewOptions.value.playlistSort || 'default',
-    set: val => viewOptions.value.playlistSort = val
+    set: val => (viewOptions.value.playlistSort = val)
   })
   const videoGroupOption = computed({
     get: () => viewOptions.value.videoGroup || 'none',
-    set: val => viewOptions.value.videoGroup = val
+    set: val => (viewOptions.value.videoGroup = val)
   })
   const searchSortOption = computed({
     get: () => viewOptions.value.searchSort || 'default',
-    set: val => viewOptions.value.searchSort = val
+    set: val => (viewOptions.value.searchSort = val)
   })
   const searchGroupOption = computed({
     get: () => viewOptions.value.searchGroup || 'none',
-    set: val => viewOptions.value.searchGroup = val
+    set: val => (viewOptions.value.searchGroup = val)
   })
 
   const groupVideoList = (list, groupBy) => {
@@ -307,7 +306,7 @@
       <!-- Tabs & Controls -->
       <div
         v-if="currentPath"
-        class="sticky top-0 z-50 bg-black/80 backdrop-blur-md backdrop-saturate-150 mb-6 border-b border-gray-700 flex flex-wrap items-end justify-between gap-4 pt-4 px-6">
+        class="sticky top-0 z-50 bg-gradient-to-r from-slate-900/50 via-gray-900/50 to-black/50 backdrop-blur-md backdrop-saturate-150 mb-6 border-b border-gray-700 flex flex-wrap items-end justify-between gap-4 pt-4 px-6">
         <nav
           class="-mb-px flex space-x-8"
           aria-label="Tabs">
@@ -392,65 +391,16 @@
           <div
             v-else
             class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <router-link
+            <ListCard
               v-for="playlist in sortedPlaylists"
               :key="playlist.id"
+              isPlaylist
+              :data="playlist"
               :to="{
                 name: 'Playlist',
                 params: { id: playlist.id },
                 query: { dir: currentPath }
-              }"
-              class="bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col h-full group relative hover:-translate-y-1">
-              
-              <!-- Stack Effect Layers -->
-              <div class="px-2 pt-5 pb-1">
-                <div class="relative aspect-video">
-                    <!-- Layer 2 (Back) -->
-                    <div class="absolute inset-x-5 -top-3.5 h-full bg-gray-800 rounded-xl transform scale-[0.92] border border-gray-600 shadow-sm z-0"></div>
-                    <!-- Layer 1 (Middle) -->
-                    <div class="absolute inset-x-2.5 -top-2 h-full bg-gray-700 rounded-xl transform scale-[0.96] border border-gray-500/50 shadow-sm z-0"></div>
-                    
-                    <!-- Main Image Container -->
-                    <div class="relative h-full w-full bg-gray-700 rounded-xl overflow-hidden shadow-xl border border-gray-600/50 z-10 transition-transform duration-200">
-                        <img
-                        v-if="playlist.cover"
-                        :src="api.getFileUrl(playlist.cover)"
-                        alt="Cover"
-                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        <div
-                        v-else
-                        class="w-full h-full flex items-center justify-center text-gray-400 bg-gray-800">
-                        <i class="bi bi-collection-play text-5xl opacity-50" />
-                        </div>
-                        
-                        <!-- Video Count Badge -->
-                        <div class="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md text-white text-xs font-medium px-2 py-1 rounded-lg border border-white/10 shadow-sm">
-                            {{ playlist.videoCount }} videos
-                        </div>
-                    </div>
-                </div>
-              </div>
-
-              <div class="p-4 pt-3 flex flex-col flex-grow">
-                <h3
-                  class="font-semibold text-white/90 line-clamp-2 mb-1.5 group-hover:text-blue-400 transition-colors text-lg leading-tight"
-                  :title="playlist.title || playlist.name">
-                  {{ playlist.title || playlist.name }}
-                </h3>
-                <div class="flex flex-col gap-1.5 mt-auto">
-                  <div class="text-sm text-gray-400 flex items-center gap-1.5">
-                    <div class="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center border border-gray-600/50">
-                         <i class="bi bi-person-fill text-xs text-gray-300" />
-                    </div>
-                    <span class="truncate font-medium text-gray-300">{{ playlist.uploader || 'Unknown' }}</span>
-                  </div>
-                  <div class="flex items-center gap-2 text-xs text-gray-500 pl-0.5">
-                      <span class="bg-gray-700/50 px-1.5 py-0.5 rounded text-gray-400">Updated</span>
-                      <span>{{ new Date(playlist.updatedAt).toLocaleDateString() }}</span>
-                  </div>
-                </div>
-              </div>
-            </router-link>
+              }" />
           </div>
         </div>
 
@@ -541,3 +491,9 @@
     </div>
   </div>
 </template>
+
+<style>
+  .video-card:before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E");
+  }
+</style>

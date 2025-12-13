@@ -3,6 +3,8 @@ backend
 ├── .env
 ├── build-installer.js
 ├── icon.png
+├── logs/
+|  └── app.log
 ├── package.json
 ├── src/
 |  ├── config/
@@ -20,5 +22,8 @@ backend
 |  └── services/
 |  |  ├── indexerService.ts
 |  |  └── metadataCache.ts
+├── tests/
+|  ├── indexerService.test.ts
+|  └── metadataCache.test.ts
 └── tsconfig.json
 ```
