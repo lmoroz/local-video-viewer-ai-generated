@@ -1,0 +1,110 @@
+import {app, BrowserWindow, protocol, net, ipcMain, shell} from 'electron';
+import path from 'path';
+import {pathToFileURL} from 'url';
+import {existsSync} from 'fs';
+import {startServer} from '../server';
+
+let mainWindow: BrowserWindow | null;
+const isDev = !app.isPackaged;
+
+// В режиме разработки (ts-node) путь отличается от продакшена (dist)
+const DIST_PATH = isDev
+  ? path.join(__dirname, '../../frontend/dist')
+  : path.join(__dirname, '../../frontend-dist');
+
+async function createWindow() {
+  protocol.handle('lmorozlvp', (req: Request) => {
+    try {
+      const requestUrl = new URL(req.url);
+      let pathName = decodeURIComponent(requestUrl.pathname);
+
+      if (pathName === '/' || !pathName) pathName = '/index.html';
+      const filePath = path.join(DIST_PATH, pathName);
+
+      console.log('--- [DEBUG] Target Path:', filePath);
+
+      if (!existsSync(filePath)) {
+        console.error('--- [ERROR] File NOT found on disk!');
+        return new Response(`File not found: ${filePath}`, {status: 404});
+      }
+
+      const fileUrl = pathToFileURL(filePath).toString();
+      return net.fetch(fileUrl).catch(err => {
+        console.error('--- [ERROR] net.fetch failed:', err);
+        return new Response('Internal Error', {status: 500});
+      });
+    } catch (error) {
+      console.error('--- [CRITICAL ERROR] inside protocol handler:', error);
+      return new Response('Handler Error', {status: 500});
+    }
+  });
+
+  const port = await startServer();
+
+  const windowConfig = {
+    width: 1280,
+    height: 800,
+    icon: path.join(__dirname, '../icon.png'),
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      // @ts-ignore
+      allowRunningInsecureContent: true,
+    },
+  };
+
+  const registerHandlers = (win: BrowserWindow) => {
+    win.webContents.setWindowOpenHandler(({url}) => {
+      shell.openExternal(url);
+      return {action: 'deny'};
+    });
+
+    win.webContents.on('did-finish-load', () => {
+      win.webContents.send('backend-port', port);
+    });
+
+    win.webContents.on('will-navigate', (event, url) => {
+      if (!url.startsWith('file://')) {
+        event.preventDefault();
+        shell.openExternal(url);
+      }
+    });
+  };
+
+  mainWindow = new BrowserWindow(windowConfig);
+
+  ipcMain.on('open-new-window', async (_event, routePath) => {
+    let win: BrowserWindow | null = new BrowserWindow(windowConfig);
+    registerHandlers(win);
+    await win.loadURL(`lmorozlvp://app/index.html#${routePath}`);
+    win.on('closed', () => {
+      win = null;
+    });
+  });
+
+  registerHandlers(mainWindow);
+  await mainWindow.loadURL('lmorozlvp://app/index.html');
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+}
+
+protocol.registerSchemesAsPrivileged([
+  {scheme: 'lmorozlvp', privileges: {standard: true, secure: true, supportFetchAPI: true, corsEnabled: true}},
+]);
+
+app.on('ready', createWindow);
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+app.on('activate', () => {
+  if (mainWindow === null) {
+    createWindow();
+  }
+});

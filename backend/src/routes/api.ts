@@ -1,6 +1,7 @@
-const express = require('express');
-const router = express.Router();
-const controller = require('../controllers/libraryController');
+import {Router} from 'express';
+import * as controller from '../controllers/libraryController';
+
+const router = Router();
 
 // Playlists
 router.get('/playlists', controller.getPlaylists);
@@ -13,4 +14,4 @@ router.get('/search', controller.search);
 // Files
 router.get('/file', controller.serveFile);
 
-module.exports = router;
+export default router;

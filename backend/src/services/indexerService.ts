@@ -1,92 +1,96 @@
-const fs = require('fs-extra');
-const path = require('path');
-const pLimit = require('p-limit').default;
-const chokidar = require('chokidar');
-const config = require('../config');
-const metadataCache = require('./metadataCache');
+import fs from 'fs-extra';
+import path from 'path';
+import pLimit from 'p-limit';
+import chokidar, {FSWatcher} from 'chokidar';
+import {config} from '../config';
+import metadataCache from './metadataCache';
+import {Playlist, VideoItem, MinifiedMetadata} from '../schemas/common.schema';
 
 class IndexerService {
-  constructor() {
-    this.limit = pLimit(50);
+  // Используем p-limit v6 (совместимый с CJS) или v7 через import.
+  // Если ошибка require ESM, нужно использовать dynamic import или p-limit@3.
+  // В данном коде предполагаем, что p-limit работает (v6+ поддерживает CJS или используем старую v3).
+  // Для надежности можно использовать: const limit = pLimit(50);
+  private limit = pLimit(50);
 
-    // Состояние для вотчера
-    this.watcher = null;
-    this.currentWatchedDir = null;
-  }
+  private watcher: FSWatcher | null = null;
+  private currentWatchedDir: string | null = null;
 
-  _setupWatcher(targetDir) {
-    // 1. Если мы уже следим за этой папкой — ничего не делаем
+  private _setupWatcher(targetDir: string): void {
     if (this.watcher && this.currentWatchedDir === targetDir) return;
 
-    // 2. Если есть старый вотчер на другой папке — убиваем его
     if (this.watcher) {
-      console.log(`[WATCHER] Stopping watch on: ${ this.currentWatchedDir }`);
+      console.log(`[WATCHER] Stopping watch on: ${this.currentWatchedDir}`);
       this.watcher.close();
       this.watcher = null;
     }
 
-    // 3. Запускаем новый
-    console.log(`[WATCHER] Starting watch on: ${ targetDir }`);
+    console.log(`[WATCHER] Starting watch on: ${targetDir}`);
     this.currentWatchedDir = targetDir;
 
     this.watcher = chokidar.watch(targetDir, {
-      ignored: /(^|[\/\\])\../, // Игнорировать скрытые файлы (начинаются с точки)
+      ignored: /(^|[\/\\])\../,
       persistent: true,
-      ignoreInitial: true, // Не триггерить события на те файлы, которые уже там есть (мы их и так просканировали)
-      depth: 3, // Не лезть слишком глубоко, если папок очень много
-      awaitWriteFinish: { // Ждать, пока файл запишется полностью
+      ignoreInitial: true,
+      depth: 3,
+      awaitWriteFinish: {
         stabilityThreshold: 2000,
         pollInterval: 100,
       },
     });
 
     this.watcher
-      .on('add', (filePath) => this._handleFileChange(filePath, 'add'))
-      .on('change', (filePath) => this._handleFileChange(filePath, 'change'))
-      .on('unlink', (filePath) => this._handleFileChange(filePath, 'unlink'));
+      .on('add', (fp) => this._handleFileChange(fp, 'add'))
+      .on('change', (fp) => this._handleFileChange(fp, 'change'))
+      .on('unlink', (fp) => this._handleFileChange(fp, 'unlink'));
   }
 
-  async _handleFileChange(filePath, event) {
-    // Нас интересуют только JSON
+  private async _handleFileChange(filePath: string, event: 'add' | 'change' | 'unlink'): Promise<void> {
     const isJson = filePath.endsWith('.info.json');
     if (!isJson) return;
 
-    if (config.DEBUG_PERF === 'true') console.log(`[WATCHER] File ${ event }: ${ path.basename(filePath) }`);
+    if (config.DEBUG_PERF) console.log(`[WATCHER] File ${event}: ${path.basename(filePath)}`);
 
     if (event === 'unlink') metadataCache.remove(filePath);
     else if (isJson) await metadataCache.get(filePath);
   }
 
-  async scanPlaylists(dirPath) {
+  public async scanPlaylists(dirPath: string): Promise<Playlist[]> {
     if (!await fs.pathExists(dirPath)) throw new Error('Directory not found');
 
     this._setupWatcher(dirPath);
 
     const items = await fs.readdir(dirPath);
 
-    const results = await Promise.all(items.map(item => this.limit(async () => {
+    const results = await Promise.all(items.map(item => this.limit(async (): Promise<Playlist | null> => {
       const itemPath = path.join(dirPath, item);
       let stat;
-      try { stat = await fs.stat(itemPath); } catch (e) { return null; }
+      try {
+        stat = await fs.stat(itemPath);
+      } catch (e) {
+        return null;
+      }
 
       if (!stat.isDirectory()) return null;
 
       let files;
-      try { files = await fs.readdir(itemPath); } catch (e) { return null; }
+      try {
+        files = await fs.readdir(itemPath);
+      } catch (e) {
+        return null;
+      }
 
       const zeroFile = files.find(f => f.startsWith('000 - '));
       if (!zeroFile) return null;
 
-      let id = null;
+      let id: string | null = null;
       let title = item;
       let uploader = 'Unknown';
-      let coverPath = null;
+      let coverPath: string | null = null;
       let totalDuration = 0;
-      let videoCount = 0;
 
       const infoFile = files.find(f => f.startsWith('000 - ') && f.endsWith('.info.json'));
       if (infoFile) {
-        // ОПТИМИЗАЦИЯ: используем кэш
         const infoData = await metadataCache.get(path.join(itemPath, infoFile));
 
         if (infoData.id) id = infoData.id;
@@ -107,14 +111,13 @@ class IndexerService {
         if (match) id = match[1];
       }
 
-      const videoFiles = files.filter(f => config.SUPPORTED_VIDEO_EXT.includes(path.extname(f).toLowerCase()));
-      videoCount = videoFiles.length;
+      const videoFiles = files.filter(f => config.SUPPORTED_VIDEO_EXT.includes(path.extname(f).toLowerCase() as any));
+      const videoCount = videoFiles.length;
 
       await Promise.all(videoFiles.map(vFile => this.limit(async () => {
         const vBase = path.basename(vFile, path.extname(vFile));
         const vInfo = vBase + '.info.json';
         if (files.includes(vInfo)) {
-          // ОПТИМИЗАЦИЯ: используем кэш для подсчета длительности
           const vData = await metadataCache.get(path.join(itemPath, vInfo));
           if (vData.duration) totalDuration += vData.duration;
         }
@@ -132,70 +135,73 @@ class IndexerService {
       };
     })));
 
-    return results.filter(Boolean);
+    return results.filter((item): item is Playlist => item !== null);
   }
 
-  async scanPlaylistVideos(dirPath, playlistId) {
+  public async scanPlaylistVideos(dirPath: string, playlistId: string): Promise<{ videos: VideoItem[], title: string } | null> {
     this._setupWatcher(dirPath);
 
     const items = await fs.readdir(dirPath);
-    let playlistPath = null;
+    let playlistPath: string | null = null;
 
-    // Быстрый поиск папки
+    // Поиск папки плейлиста
     for (const item of items) {
       const p = path.join(dirPath, item);
       try {
-        if ((await fs.stat(p)).isDirectory()) {
+        const stat = await fs.stat(p);
+        if (stat.isDirectory()) {
           const f = await fs.readdir(p);
           const zero = f.find(name => name.startsWith('000 - '));
-          if (zero && zero.includes(`[${ playlistId }]`)) {
+          if (zero && zero.includes(`[${playlistId}]`)) {
             playlistPath = p;
             break;
           }
         }
-      } catch (e) {}
+      } catch (e) { /* ignore access errors */
+      }
     }
 
     if (!playlistPath) return null;
 
     const files = await fs.readdir(playlistPath);
-
     let playlistTitle = path.basename(playlistPath);
+
     const plInfoFile = files.find(f => f.startsWith('000 - ') && f.endsWith('.info.json'));
     if (plInfoFile) {
-      // ОПТИМИЗАЦИЯ: кэш
       const d = await metadataCache.get(path.join(playlistPath, plInfoFile));
       if (d.title) playlistTitle = d.title;
     }
 
     const videoPromises = files
-      .filter(f => config.SUPPORTED_VIDEO_EXT.includes(path.extname(f).toLowerCase()))
-      .map(file => this.limit(async () => {
+      .filter(f => config.SUPPORTED_VIDEO_EXT.includes(path.extname(f).toLowerCase() as any))
+      .map(file => this.limit(async (): Promise<VideoItem> => {
         const ext = path.extname(file);
         const basename = path.basename(file, ext);
         const infoFile = basename + '.info.json';
         const descFile = basename + '.description';
 
-        let metadata = {};
-        let description = '';
-        let thumbnail = null;
+        const infoFilePath = path.join(playlistPath!, infoFile);
+        const descFilePath = path.join(playlistPath!, descFile);
 
-        // Параллельный запрос: Metadata (Cache) + Description (FS)
+        // Явная типизация промисов для Promise.all
         const [metaDataResult, descResult] = await Promise.all([
-          // ОПТИМИЗАЦИЯ: используем кэш
-          files.includes(infoFile) ? metadataCache.get(path.join(playlistPath, infoFile)) : {},
+          files.includes(infoFile)
+            ? metadataCache.get(infoFilePath)
+            : Promise.resolve({} as MinifiedMetadata),
 
-          fs.pathExists(path.join(playlistPath, descFile)).then(exists =>
-            exists ? fs.readFile(path.join(playlistPath, descFile), 'utf-8').catch(() => '') : '',
-          ),
+          fs.pathExists(descFilePath).then(exists =>
+            exists ? fs.readFile(descFilePath, 'utf-8').catch(() => '') : ''
+          )
         ]);
 
-        metadata = metaDataResult;
-        description = descResult;
 
+        const metadata: MinifiedMetadata = metaDataResult;
+        const description: string = descResult;
+
+        let thumbnail: string | null = null;
         for (const ie of config.SUPPORTED_IMG_EXT) {
           if (files.includes(basename + ie)) {
-            thumbnail = path.join(playlistPath, basename + ie);
+            thumbnail = path.join(playlistPath!, basename + ie);
             break;
           }
         }
@@ -203,16 +209,16 @@ class IndexerService {
         return {
           id: metadata.id,
           filename: file,
+          // Свойства теперь доступны благодаря типу MinifiedMetadata
           title: metadata.fulltitle || metadata.title || file,
           uploader: metadata.uploader,
           uploader_url: metadata.uploader_url,
           channel_url: metadata.channel_url,
           upload_date: metadata.upload_date,
           duration: metadata.duration,
-          chapters: metadata.chapters,
           description,
           thumbnail,
-          path: path.join(playlistPath, file),
+          path: path.join(playlistPath!, file),
         };
       }));
 
@@ -220,19 +226,23 @@ class IndexerService {
     return {videos, title: playlistTitle};
   }
 
-  async scanAllVideos(rootDir) {
+  public async scanAllVideos(rootDir: string): Promise<VideoItem[]> {
     if (!await fs.pathExists(rootDir)) throw new Error('Directory not found');
 
     this._setupWatcher(rootDir);
+    const results: VideoItem[] = [];
 
-    const results = [];
+    const walk = async (dir: string): Promise<void> => {
+      let items: fs.Dirent[] = [];
+      try {
+        // withFileTypes: true возвращает Dirent[], это ок
+        items = await fs.readdir(dir, {withFileTypes: true});
+      } catch (e) {
+        return; // Возвращаем void (Promise<void>)
+      }
 
-    const walk = async (dir) => {
-      let items;
-      try { items = await fs.readdir(dir, {withFileTypes: true}); } catch (e) { return; }
-
-      const files = [];
-      const folders = [];
+      const files: string[] = [];
+      const folders: string[] = [];
 
       for (const item of items) {
         if (item.isDirectory()) {
@@ -240,23 +250,26 @@ class IndexerService {
         }
         else {
           const ext = path.extname(item.name).toLowerCase();
-          if (config.SUPPORTED_VIDEO_EXT.includes(ext)) {
+          if (config.SUPPORTED_VIDEO_EXT.includes(ext as any)) {
             files.push(item.name);
           }
         }
       }
 
       if (files.length > 0) {
-        let playlistId = null;
+        let playlistId: string | null | undefined = null;
         let playlistName = path.basename(dir);
+
         try {
-          const allFiles = await fs.readdir(dir); // Имена файлов для поиска ID плейлиста
+          // Читаем просто имена файлов для поиска "000 - [ID]"
+          const allFiles = await fs.readdir(dir);
           const zeroFile = allFiles.find(f => f.startsWith('000 - '));
           if (zeroFile) {
             const match = zeroFile.match(/\[([a-zA-Z0-9_-]+)\]/);
             if (match) playlistId = match[1];
           }
-        } catch (e) {}
+        } catch (e) {
+        }
 
         const filePromises = files.map(filename => this.limit(async () => {
           const itemPath = path.join(dir, filename);
@@ -264,14 +277,10 @@ class IndexerService {
           const basename = path.basename(filename, ext);
           const infoFile = basename + '.info.json';
 
-          let metadata = {};
-          let thumbnail = null;
+          let metadata: MinifiedMetadata = {};
+          let thumbnail: string | null = null;
 
           const infoPath = path.join(dir, infoFile);
-          // ОПТИМИЗАЦИЯ: кэш. Нам даже не надо проверять fs.exists лишний раз,
-          // так как metadataCache.get внутри делает try/catch.
-          // Но для точности "есть ли файл info.json рядом" проверка `await fs.pathExists` полезна,
-          // хотя можно оптимизировать, проверяя наличие `infoFile` в массиве `allFiles` выше.
           if (await fs.pathExists(infoPath)) {
             metadata = await metadataCache.get(infoPath);
           }
@@ -288,7 +297,8 @@ class IndexerService {
           try {
             const stat = await fs.stat(itemPath);
             ctime = stat.ctimeMs;
-          } catch (e) {}
+          } catch (e) {
+          }
 
           results.push({
             id: metadata.id || this._extractIdFromFilename(filename),
@@ -308,6 +318,8 @@ class IndexerService {
         await Promise.all(filePromises);
       }
 
+      // Рекурсивный вызов. walk возвращает Promise<void>, map -> Promise<void>[], Promise.all -> Promise<void[]>
+      // Это корректно, "void return used" быть не должно, если линтер настроен правильно.
       await Promise.all(folders.map(folder => walk(folder)));
     };
 
@@ -315,10 +327,10 @@ class IndexerService {
     return results;
   }
 
-  _extractIdFromFilename(filename) {
+  private _extractIdFromFilename(filename: string): string | undefined {
     const match = filename.match(/\[([a-zA-Z0-9_-]+)\]/);
-    return match ? match[1] : null;
+    return match ? match[1] : undefined;
   }
 }
 
-module.exports = new IndexerService();
+export default new IndexerService();

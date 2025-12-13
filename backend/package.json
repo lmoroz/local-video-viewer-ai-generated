@@ -1,14 +1,15 @@
 {
   "name": "video-viewer-backend",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Backend for Video Viewer",
   "author": "Morozhnikova Larisa",
-  "main": "electron-main.js",
+  "main": "dist/electron/main.js",
   "scripts": {
-    "start": "nodemon --ignore \"cache/**\" server.js",
-    "electron:dev": "electron .",
-    "dist": "node build-installer.js",
-    "bundle": "cd ../frontend && npm run build && cd ../backend && node build-installer.js"
+    "start": "nodemon --watch 'src/**/*.ts' --exec \"npx ts-node\" src/server.ts",
+    "build": "tsc",
+    "electron:dev": "cross-env NODE_ENV=development tsc && electron .",
+    "dist": "npm run build && node build-installer.js",
+    "bundle": "cd ../frontend && npm run build && cd ../backend && npm run build && node build-installer.js"
   },
   "build": {
     "appId": "com.videoviewer.app",
@@ -33,11 +34,19 @@
     "express": "^4.18.2",
     "fs-extra": "^11.2.0",
     "lru-cache": "^11.2.4",
-    "p-limit": "^7.2.0"
+    "p-limit": "^7.2.0",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^25.0.1",
+    "cross-env": "^10.1.0",
     "electron": "^39.2.6",
     "electron-builder": "^26.0.12",
-    "nodemon": "^3.1.11"
+    "nodemon": "^3.1.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }

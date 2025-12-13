@@ -4,6 +4,8 @@ const {execSync} = require('child_process');
 
 async function build() {
   const frontendSrc = path.join(__dirname, '../frontend/dist');
+  // В собранном приложении скрипт будет работать из корня, но electron-main теперь в dist/electron
+  // Нам нужно положить frontend-dist в корень backend (рядом с package.json)
   const frontendDest = path.join(__dirname, 'frontend-dist');
 
   console.log('Checking for frontend build...');
@@ -25,7 +27,12 @@ async function build() {
 
   console.log('Building Electron app...');
   try {
+    // Убедимся, что TS скомпилирован
+    // execSync('npm run build', { stdio: 'inherit' }); // Можно раскомментировать, если запускается отдельно
+
     execSync('npx electron-builder', {stdio: 'inherit'});
+
+    // Очистка (опционально)
     await fs.remove(frontendDest);
   } catch (e) {
     console.error('Build failed:', e);
