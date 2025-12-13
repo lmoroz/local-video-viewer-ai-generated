@@ -5,6 +5,7 @@ import chokidar, {FSWatcher} from 'chokidar';
 import {config} from '../config';
 import metadataCache from './metadataCache';
 import {Playlist, VideoItem, MinifiedMetadata} from '../schemas/common.schema';
+import {logger} from '../utils/logger';
 
 class IndexerService {
   // Используем p-limit v6 (совместимый с CJS) или v7 через import.
@@ -19,13 +20,9 @@ class IndexerService {
   private _setupWatcher(targetDir: string): void {
     if (this.watcher && this.currentWatchedDir === targetDir) return;
 
-    if (this.watcher) {
-      console.log(`[WATCHER] Stopping watch on: ${this.currentWatchedDir}`);
-      this.watcher.close();
-      this.watcher = null;
-    }
+    this.stop(); // Stop previous watcher if exists
 
-    console.log(`[WATCHER] Starting watch on: ${targetDir}`);
+    logger.info({dir: targetDir}, '[WATCHER] Starting watch');
     this.currentWatchedDir = targetDir;
 
     this.watcher = chokidar.watch(targetDir, {
@@ -45,11 +42,20 @@ class IndexerService {
       .on('unlink', (fp) => this._handleFileChange(fp, 'unlink'));
   }
 
+  public async stop(): Promise<void> {
+    if (this.watcher) {
+      logger.info({dir: this.currentWatchedDir}, '[WATCHER] Stopping watch');
+      await this.watcher.close();
+      this.watcher = null;
+      this.currentWatchedDir = null;
+    }
+  }
+
   private async _handleFileChange(filePath: string, event: 'add' | 'change' | 'unlink'): Promise<void> {
     const isJson = filePath.endsWith('.info.json');
     if (!isJson) return;
 
-    if (config.DEBUG_PERF) console.log(`[WATCHER] File ${event}: ${path.basename(filePath)}`);
+    if (config.DEBUG_PERF) logger.debug({event, file: path.basename(filePath)}, '[WATCHER] File event');
 
     if (event === 'unlink') metadataCache.remove(filePath);
     else if (isJson) await metadataCache.get(filePath);
@@ -107,7 +113,7 @@ class IndexerService {
       }
 
       if (!id) {
-        const match = zeroFile.match(/\[([a-zA-Z0-9_-]+)\]/);
+        const match = zeroFile.match(/\[([a-zA-Z0-9_-]+)]/);
         if (match) id = match[1];
       }
 
@@ -209,7 +215,6 @@ class IndexerService {
         return {
           id: metadata.id,
           filename: file,
-          // Свойства теперь доступны благодаря типу MinifiedMetadata
           title: metadata.fulltitle || metadata.title || file,
           uploader: metadata.uploader,
           uploader_url: metadata.uploader_url,
@@ -265,7 +270,7 @@ class IndexerService {
           const allFiles = await fs.readdir(dir);
           const zeroFile = allFiles.find(f => f.startsWith('000 - '));
           if (zeroFile) {
-            const match = zeroFile.match(/\[([a-zA-Z0-9_-]+)\]/);
+            const match = zeroFile.match(/\[([a-zA-Z0-9_-]+)]/);
             if (match) playlistId = match[1];
           }
         } catch (e) {
@@ -328,7 +333,7 @@ class IndexerService {
   }
 
   private _extractIdFromFilename(filename: string): string | undefined {
-    const match = filename.match(/\[([a-zA-Z0-9_-]+)\]/);
+    const match = filename.match(/\[([a-zA-Z0-9_-]+)]/);
     return match ? match[1] : undefined;
   }
 }

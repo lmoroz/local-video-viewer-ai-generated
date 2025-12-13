@@ -2,6 +2,13 @@ import {app, BrowserWindow, protocol, net, ipcMain, shell} from 'electron';
 import path from 'path';
 import {pathToFileURL} from 'url';
 import {existsSync} from 'fs';
+// Импортируем server ПОСЛЕ установки переменных окружения, если это возможно,
+// но так как import всплывают, мы установим переменную в самом начале main.ts
+// Однако лучше передать путь в функцию startServer, но для минимальных изменений кода используем env.
+
+// !!! ВАЖНО: Устанавливаем путь для данных приложения
+process.env.APP_USER_DATA = app.getPath('userData');
+
 import {startServer} from '../server';
 
 let mainWindow: BrowserWindow | null;

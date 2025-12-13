@@ -3,6 +3,7 @@ import path from 'path';
 import {LRUCache} from 'lru-cache';
 import {config} from '../config';
 import {MinifiedMetadata, MinifiedMetadataSchema} from '../schemas/common.schema';
+import {logger} from '../utils/logger';
 
 interface CacheEntry {
   mtime: number;
@@ -24,14 +25,14 @@ class MetadataCache {
   private loadFromDisk(): void {
     try {
       if (fs.existsSync(config.CACHE_FILE_PATH)) {
-        console.log('📦 Loading metadata cache from disk...');
+        logger.info('📦 Loading metadata cache from disk...');
         const dump = fs.readJsonSync(config.CACHE_FILE_PATH);
         // @ts-ignore: LRUCache load types can be tricky with raw dumps
         this.cache.load(dump);
-        console.log(`✅ Cache loaded: ${this.cache.size} entries.`);
+        logger.info({entries: this.cache.size}, '✅ Cache loaded');
       }
     } catch (err) {
-      console.warn('⚠️ Failed to load cache, starting fresh.');
+      logger.warn({err}, '⚠️ Failed to load cache, starting fresh.');
       fs.removeSync(config.CACHE_FILE_PATH);
     }
   }
@@ -50,12 +51,12 @@ class MetadataCache {
       await fs.ensureDir(path.dirname(config.CACHE_FILE_PATH));
       const dump = this.cache.dump();
       await fs.writeJson(config.CACHE_FILE_PATH, dump);
-      if (config.DEBUG_PERF) console.log('💾 Cache saved.');
+      if (config.DEBUG_PERF) logger.debug('💾 Cache saved.');
 
       this.isDirty = false;
       this.saveTimer = null;
     } catch (err) {
-      console.error('❌ Error saving cache:', err);
+      logger.error({err}, '❌ Error saving cache');
     }
   }
 
@@ -105,7 +106,7 @@ class MetadataCache {
     if (this.cache.delete(filePath)) {
       this.scheduleSave();
       if (config.DEBUG_PERF) {
-        console.log(`[CACHE] Evicted: ${path.basename(filePath)}`);
+        logger.debug({file: path.basename(filePath)}, '[CACHE] Evicted');
       }
     }
   }
@@ -113,10 +114,5 @@ class MetadataCache {
 
 const instance = new MetadataCache();
 
-process.on('SIGINT', async () => {
-  console.log('\n💾 Saving cache before exit...');
-  await instance.saveToDisk();
-  process.exit();
-});
 
 export default instance;
