@@ -1,9 +1,9 @@
-import {describe, it, expect, vi, beforeEach} from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 // @ts-ignore
 import path from 'path';
 
 // 1. Используем vi.hoisted для создания переменных, доступных внутри фабрики vi.mock
-const {mockMetadataCache} = vi.hoisted(() => {
+const { mockMetadataCache } = vi.hoisted(() => {
   return {
     mockMetadataCache: {
       get: vi.fn(),
@@ -63,8 +63,7 @@ describe('IndexerService', () => {
       // @ts-ignore
       fs.pathExists.mockResolvedValue(false);
 
-      await expect(indexerService.scanAllVideos('/bad/path'))
-        .rejects.toThrow('Directory not found');
+      await expect(indexerService.scanAllVideos('/bad/path')).rejects.toThrow('Directory not found');
     });
 
     it('should scan videos and merge with metadata', async () => {
@@ -74,9 +73,9 @@ describe('IndexerService', () => {
       fs.pathExists.mockResolvedValue(true);
 
       const mockDirents = [
-        {name: 'movie.mp4', isDirectory: () => false},
-        {name: 'movie.info.json', isDirectory: () => false},
-        {name: 'subfolder', isDirectory: () => true},
+        { name: 'movie.mp4', isDirectory: () => false },
+        { name: 'movie.info.json', isDirectory: () => false },
+        { name: 'subfolder', isDirectory: () => true },
       ];
       // @ts-ignore
       fs.readdir.mockImplementation(async (pathArg) => {
@@ -85,7 +84,7 @@ describe('IndexerService', () => {
       });
 
       // @ts-ignore
-      fs.stat.mockResolvedValue({ctimeMs: 1000});
+      fs.stat.mockResolvedValue({ ctimeMs: 1000 });
 
       mockMetadataCache.get.mockResolvedValue({
         id: '123',
@@ -111,11 +110,9 @@ describe('IndexerService', () => {
       // @ts-ignore
       fs.pathExists.mockResolvedValue(true);
       // @ts-ignore
-      fs.readdir.mockResolvedValue([
-        {name: 'video [ABC-123].mp4', isDirectory: () => false}
-      ]);
+      fs.readdir.mockResolvedValue([{ name: 'video [ABC-123].mp4', isDirectory: () => false }]);
       // @ts-ignore
-      fs.stat.mockResolvedValue({ctimeMs: 0});
+      fs.stat.mockResolvedValue({ ctimeMs: 0 });
 
       mockMetadataCache.get.mockResolvedValue({});
 
@@ -151,8 +148,8 @@ describe('IndexerService', () => {
 
       // @ts-ignore
       fs.stat.mockImplementation(async (p) => {
-        if (p === playlistDir) return {isDirectory: () => true, mtimeMs: 500};
-        return {isDirectory: () => false};
+        if (p === playlistDir) return { isDirectory: () => true, mtimeMs: 500 };
+        return { isDirectory: () => false };
       });
 
       // Кэш должен вернуть что-то для infoFile, чтобы сервис не упал (опционально)
@@ -182,11 +179,11 @@ describe('IndexerService', () => {
       });
 
       // @ts-ignore
-      fs.stat.mockResolvedValue({isDirectory: () => true, mtimeMs: 0});
+      fs.stat.mockResolvedValue({ isDirectory: () => true, mtimeMs: 0 });
 
       mockMetadataCache.get.mockImplementation(async (filepath: any) => {
         if (typeof filepath === 'string' && filepath.includes('000 - [ID1].info.json')) {
-          return {title: 'Full Course Title', uploader: 'Prof'};
+          return { title: 'Full Course Title', uploader: 'Prof' };
         }
         return {};
       });

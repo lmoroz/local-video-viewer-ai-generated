@@ -15,9 +15,7 @@ let mainWindow: BrowserWindow | null;
 const isDev = !app.isPackaged;
 
 // В режиме разработки (ts-node) путь отличается от продакшена (dist)
-const DIST_PATH = isDev
-  ? path.join(__dirname, '../../frontend/dist')
-  : path.join(__dirname, '../../frontend-dist');
+const DIST_PATH = isDev ? path.join(__dirname, '../../frontend/dist') : path.join(__dirname, '../../frontend-dist');
 
 async function createWindow() {
   protocol.handle('lmorozlvp', (req: Request) => {
@@ -36,7 +34,7 @@ async function createWindow() {
       }
 
       const fileUrl = pathToFileURL(filePath).toString();
-      return net.fetch(fileUrl).catch(err => {
+      return net.fetch(fileUrl).catch((err) => {
         console.error('--- [ERROR] net.fetch failed:', err);
         return new Response('Internal Error', { status: 500 });
       });
@@ -51,8 +49,8 @@ async function createWindow() {
   const windowConfig = {
     width: 1280,
     height: 800,
-    icon: path.join(__dirname, '../icon.png'),
-    frame: false,        // Убираем рамки
+    icon: path.join(__dirname, '../../icon.png'),
+    frame: false, // Убираем рамки
     backgroundMaterial: 'acrylic', // https://www.electronjs.org/docs/latest/api/browser-window#winsetbackgroundmaterialmaterial-windows
     autoHideMenuBar: true,
     // fullscreenable: true,
@@ -62,7 +60,6 @@ async function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      // @ts-ignore
       allowRunningInsecureContent: true,
     },
   };
@@ -74,6 +71,7 @@ async function createWindow() {
     });
 
     win.webContents.on('did-finish-load', () => {
+      // Отправляем порт бэкенда в рендерер
       win.webContents.send('backend-port', port);
     });
 
@@ -85,11 +83,11 @@ async function createWindow() {
     });
   };
 
-  // @ts-ignore
+  // @ts-expect-error: Window config types
   mainWindow = new BrowserWindow(windowConfig);
 
   ipcMain.on('open-new-window', async (_event, routePath) => {
-    // @ts-ignore
+    // @ts-expect-error: Window config types
     let win: BrowserWindow | null = new BrowserWindow(windowConfig);
     registerHandlers(win);
     await win.loadURL(`lmorozlvp://app/index.html#${routePath}`);
@@ -127,7 +125,10 @@ ipcMain.on('window-close', (event) => {
 });
 
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'lmorozlvp', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } },
+  {
+    scheme: 'lmorozlvp',
+    privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true },
+  },
 ]);
 
 app.on('ready', createWindow);

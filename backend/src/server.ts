@@ -1,11 +1,11 @@
-import express, {Request, Response, NextFunction} from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
-import {config} from './config';
+import { config } from './config';
 import apiRoutes from './routes/api';
-import {PerformanceTimer} from './utils/performance';
-import {logger, requestLogger} from './utils/logger';
+import { PerformanceTimer } from './utils/performance';
+import { logger, requestLogger } from './utils/logger';
 import metadataCache from './services/metadataCache';
 import indexerService from './services/indexerService';
 import http from 'http';
@@ -31,12 +31,11 @@ const frontendPath = path.join(__dirname, '../frontend-dist');
 app.use(express.static(frontendPath));
 
 app.get('*', (req: Request, res: Response) => {
-  if (req.path.startsWith('/api')) return res.status(404).json({error: 'API endpoint not found'});
+  if (req.path.startsWith('/api')) return res.status(404).json({ error: 'API endpoint not found' });
 
   if (fs.existsSync(path.join(frontendPath, 'index.html'))) {
     res.sendFile(path.join(frontendPath, 'index.html'));
-  }
-  else {
+  } else {
     res.status(404).send('Frontend not found.');
   }
 });
@@ -48,10 +47,9 @@ function startServer(port: number = 0): Promise<number> {
     server = app.listen(port, () => {
       const address = server.address();
       if (address && typeof address !== 'string') {
-        logger.info({port: address.port}, '🚀 Server running');
+        logger.info({ port: address.port }, '🚀 Server running');
         resolve(address.port);
-      }
-      else {
+      } else {
         reject(new Error('Failed to get server address'));
       }
     });
@@ -61,7 +59,7 @@ function startServer(port: number = 0): Promise<number> {
 
 // Graceful Shutdown Logic
 async function shutdown(signal: string) {
-  logger.info({signal}, '🛑 Received termination signal. Shutting down gracefully...');
+  logger.info({ signal }, '🛑 Received termination signal. Shutting down gracefully...');
 
   if (server) {
     server.close(() => {
@@ -75,7 +73,7 @@ async function shutdown(signal: string) {
     logger.info('💾 State saved successfully.');
     process.exit(0);
   } catch (err) {
-    logger.error({err}, '❌ Error during shutdown');
+    logger.error({ err }, '❌ Error during shutdown');
     process.exit(1);
   }
 }
@@ -85,4 +83,4 @@ process.on('SIGINT', () => shutdown('SIGINT'));
 
 if (require.main === module) startServer(config.PORT);
 
-export {app, startServer};
+export { app, startServer };

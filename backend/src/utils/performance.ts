@@ -1,5 +1,5 @@
-import {performance} from 'perf_hooks';
-import {config} from '../config';
+import { performance } from 'perf_hooks';
+import { config } from '../config';
 
 export class PerformanceTimer {
   private label: string;

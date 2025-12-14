@@ -1,47 +1,47 @@
-import {Request, Response} from 'express';
+import { Request, Response } from 'express';
 import indexer from '../services/indexerService';
 import path from 'path';
-import {ScanQuerySchema, SearchQuerySchema} from '../schemas/common.schema';
+import { ScanQuerySchema, SearchQuerySchema } from '../schemas/common.schema';
 import * as searchService from '../services/searchService';
-import {logger} from '../utils/logger';
+import { logger } from '../utils/logger';
 
 export const getPlaylists = async (req: Request, res: Response) => {
   const validation = ScanQuerySchema.safeParse(req.query);
 
   if (!validation.success) {
-    return res.status(400).json({error: validation.error.issues[0].message});
+    return res.status(400).json({ error: validation.error.issues[0].message });
   }
 
-  const {dir} = validation.data;
+  const { dir } = validation.data;
 
   try {
     const playlists = await indexer.scanPlaylists(dir);
     res.json(playlists);
   } catch (err: any) {
-    logger.error({err}, 'Failed to get playlists');
+    logger.error({ err }, 'Failed to get playlists');
     if (err.message === 'Directory not found') {
-      return res.status(404).json({error: 'Directory not found'});
+      return res.status(404).json({ error: 'Directory not found' });
     }
-    res.status(500).json({error: 'Internal server error'});
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 export const getPlaylistDetails = async (req: Request, res: Response) => {
   const validation = ScanQuerySchema.safeParse(req.query);
-  const {id} = req.params;
+  const { id } = req.params;
 
   if (!validation.success) {
-    return res.status(400).json({error: validation.error.issues[0].message});
+    return res.status(400).json({ error: validation.error.issues[0].message });
   }
 
   try {
     const result = await indexer.scanPlaylistVideos(validation.data.dir, id);
-    if (!result) return res.status(404).json({error: 'Playlist not found'});
+    if (!result) return res.status(404).json({ error: 'Playlist not found' });
 
     res.json(result);
   } catch (err) {
-    logger.error({err, playlistId: id}, 'Failed to get playlist details');
-    res.status(500).json({error: 'Internal server error'});
+    logger.error({ err, playlistId: id }, 'Failed to get playlist details');
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -55,7 +55,7 @@ export const serveFile = (req: Request, res: Response) => {
   res.sendFile(path.resolve(filePath), (err) => {
     if (err && !res.headersSent) {
       // Это не всегда ошибка сервера (клиент прервал загрузку), логируем как warn
-      logger.warn({err, filePath}, 'File serve interrupted or missing');
+      logger.warn({ err, filePath }, 'File serve interrupted or missing');
       res.status(404).send('File not found or access denied');
     }
   });
@@ -65,7 +65,7 @@ export const getAllVideos = async (req: Request, res: Response) => {
   const validation = ScanQuerySchema.safeParse(req.query);
 
   if (!validation.success) {
-    return res.status(400).json({error: validation.error.issues[0].message});
+    return res.status(400).json({ error: validation.error.issues[0].message });
   }
 
   try {
@@ -83,18 +83,18 @@ export const getAllVideos = async (req: Request, res: Response) => {
 
     res.json(videos);
   } catch (err: any) {
-    logger.error({err}, 'Failed to scan all videos');
-    if (err.message === 'Directory not found') return res.status(404).json({error: 'Directory not found'});
-    res.status(500).json({error: 'Internal server error'});
+    logger.error({ err }, 'Failed to scan all videos');
+    if (err.message === 'Directory not found') return res.status(404).json({ error: 'Directory not found' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 export const search = async (req: Request, res: Response) => {
   const validation = SearchQuerySchema.safeParse(req.query);
 
-  if (!validation.success) return res.status(400).json({error: validation.error.issues[0].message});
+  if (!validation.success) return res.status(400).json({ error: validation.error.issues[0].message });
 
-  const {dir, query} = validation.data;
+  const { dir, query } = validation.data;
 
   try {
     const allVideos = await indexer.scanAllVideos(dir);
@@ -102,7 +102,7 @@ export const search = async (req: Request, res: Response) => {
 
     res.json(results);
   } catch (err) {
-    logger.error({err, query}, 'Search failed');
-    res.status(500).json({error: 'Internal server error'});
+    logger.error({ err, query }, 'Search failed');
+    res.status(500).json({ error: 'Internal server error' });
   }
 };

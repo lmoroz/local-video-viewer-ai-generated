@@ -1,10 +1,10 @@
 import pino from 'pino';
 import path from 'path';
 import fs from 'fs-extra';
-// @ts-ignore
+import pinoHttp from 'pino-http';
 import pretty from 'pino-pretty';
-import {Writable} from 'stream';
-import {config} from '../config'; // Импортируем конфиг, чтобы взять DATA_ROOT
+import { Writable } from 'stream';
+import { config } from '../config'; // Импортируем конфиг, чтобы взять DATA_ROOT
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -20,7 +20,7 @@ const consoleLogStream = new Writable({
     const line = chunk.toString();
     console.log(line.trimEnd());
     callback();
-  }
+  },
 });
 
 // 2. Настраиваем pino-pretty
@@ -36,22 +36,22 @@ const prettyStream = pretty({
 const streams = [
   // Файл пишем всегда
   {
-    stream: fs.createWriteStream(logFilePath, {flags: 'a'}),
+    stream: fs.createWriteStream(logFilePath, { flags: 'a' }),
   },
   // Консоль добавляем только в Dev-режиме
-  ...(isDev && config.DEBUG_PERF ? [{stream: prettyStream}] : []),
+  ...(isDev && config.DEBUG_PERF ? [{ stream: prettyStream }] : []),
 ];
 
 export const logger = pino(
   {
     level: process.env.LOG_LEVEL || 'info',
-    base: {pid: process.pid},
+    base: { pid: process.pid },
     timestamp: pino.stdTimeFunctions.isoTime,
   },
   pino.multistream(streams)
 );
 
-export const requestLogger = require('pino-http')({
+export const requestLogger = pinoHttp({
   logger,
   autoLogging: {
     ignore: (req: any) => req.url?.startsWith('/file'),

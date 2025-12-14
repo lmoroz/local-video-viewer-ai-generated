@@ -1,4 +1,4 @@
-import {z} from 'zod';
+import { z } from 'zod';
 
 // Схема оптимизированных метаданных для кэша и UI
 export const MinifiedMetadataSchema = z.object({
@@ -45,9 +45,9 @@ export type Playlist = z.infer<typeof PlaylistSchema>;
 
 // Валидация Query параметров
 export const ScanQuerySchema = z.object({
-  dir: z.string().min(1, "Directory path is required"),
+  dir: z.string().min(1, 'Directory path is required'),
 });
 
 export const SearchQuerySchema = ScanQuerySchema.extend({
-  query: z.string().min(1, "Query string is required"),
+  query: z.string().min(1, 'Query string is required'),
 });

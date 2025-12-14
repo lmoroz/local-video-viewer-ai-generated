@@ -1,9 +1,9 @@
 import fs from 'fs-extra';
 import path from 'path';
-import {LRUCache} from 'lru-cache';
-import {config} from '../config';
-import {MinifiedMetadata, MinifiedMetadataSchema} from '../schemas/common.schema';
-import {logger} from '../utils/logger';
+import { LRUCache } from 'lru-cache';
+import { config } from '../config';
+import { MinifiedMetadata, MinifiedMetadataSchema } from '../schemas/common.schema';
+import { logger } from '../utils/logger';
 
 interface CacheEntry {
   mtime: number;
@@ -27,12 +27,12 @@ class MetadataCache {
       if (fs.existsSync(config.CACHE_FILE_PATH)) {
         logger.info('📦 Loading metadata cache from disk...');
         const dump = fs.readJsonSync(config.CACHE_FILE_PATH);
-        // @ts-ignore: LRUCache load types can be tricky with raw dumps
+        // LRUCache load types can be tricky
         this.cache.load(dump);
-        logger.info({entries: this.cache.size}, '✅ Cache loaded');
+        logger.info({ entries: this.cache.size }, '✅ Cache loaded');
       }
     } catch (err) {
-      logger.warn({err}, '⚠️ Failed to load cache, starting fresh.');
+      logger.warn({ err }, '⚠️ Failed to load cache, starting fresh.');
       fs.removeSync(config.CACHE_FILE_PATH);
     }
   }
@@ -56,7 +56,7 @@ class MetadataCache {
       this.isDirty = false;
       this.saveTimer = null;
     } catch (err) {
-      logger.error({err}, '❌ Error saving cache');
+      logger.error({ err }, '❌ Error saving cache');
     }
   }
 
@@ -96,7 +96,7 @@ class MetadataCache {
       this.scheduleSave();
 
       return minifiedData;
-    } catch (err) {
+    } catch (_err) {
       // Если файла нет или JSON битый — возвращаем пустой объект
       return {};
     }
@@ -106,13 +106,12 @@ class MetadataCache {
     if (this.cache.delete(filePath)) {
       this.scheduleSave();
       if (config.DEBUG_PERF) {
-        logger.debug({file: path.basename(filePath)}, '[CACHE] Evicted');
+        logger.debug({ file: path.basename(filePath) }, '[CACHE] Evicted');
       }
     }
   }
 }
 
 const instance = new MetadataCache();
-
 
 export default instance;

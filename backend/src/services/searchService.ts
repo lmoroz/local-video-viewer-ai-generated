@@ -1,15 +1,15 @@
-import {VideoItem} from '../schemas/common.schema';
-import {PorterStemmerRu, PorterStemmer} from 'natural';
+import { VideoItem } from '../schemas/common.schema';
+import { PorterStemmerRu, PorterStemmer } from 'natural';
 
 // --- Types ---
 
 type TokenType = 'PHRASE' | 'WORD';
 
 interface QueryToken {
-  value: string;      // The raw string (normalized)
-  stem?: string;      // The word stem (if applicable)
+  value: string; // The raw string (normalized)
+  stem?: string; // The word stem (if applicable)
   type: TokenType;
-  required: boolean;  // Was '+' used?
+  required: boolean; // Was '+' used?
 }
 
 interface ScoredVideo {
@@ -68,20 +68,18 @@ const parseQuery = (rawQuery: string): QueryToken[] => {
     const isWordMandatory = !!match[3];
     const wordContent = match[4];
 
-
     if (phraseContent) {
       tokens.push({
         value: phraseContent,
         type: 'PHRASE',
-        required: isPhraseMandatory
+        required: isPhraseMandatory,
       });
-    }
-    else if (wordContent) {
+    } else if (wordContent) {
       tokens.push({
         value: wordContent,
         stem: getStem(wordContent),
         type: 'WORD',
-        required: isWordMandatory
+        required: isWordMandatory,
       });
     }
   }
@@ -96,14 +94,14 @@ export const searchVideos = (videos: VideoItem[], rawQuery: string): VideoItem[]
 
   if (queryTokens.length === 0) return [];
 
-  const scoredResults: ScoredVideo[] = videos.map(video => {
+  const scoredResults: ScoredVideo[] = videos.map((video) => {
     const rawTitle = video.title ?? video.filename ?? '';
     const normalizedTitle = normalizeText(rawTitle);
 
     // Tokenize title for word-based analysis (removing punctuation for clean word list)
     // Note: We keep normalizedTitle intact for Phrase matching
     const titleWords = normalizedTitle.split(/[^a-zа-яё0-9]+/i).filter(Boolean);
-    const titleStems = titleWords.map(w => getStem(w));
+    const titleStems = titleWords.map((w) => getStem(w));
 
     let score = 0;
     let constraintsMet = true;
@@ -118,10 +116,9 @@ export const searchVideos = (videos: VideoItem[], rawQuery: string): VideoItem[]
           tokenScore = 100; // High value for exact phrase
           matchFound = true;
         }
-      }
-      else {
+      } else {
         // --- Word Logic ---
-        const {value, stem} = token;
+        const { value, stem } = token;
 
         // 1. Exact Word Match (Highest Word Priority)
         if (titleWords.includes(value)) {
@@ -134,7 +131,7 @@ export const searchVideos = (videos: VideoItem[], rawQuery: string): VideoItem[]
           matchFound = true;
         }
         // 3. Substring/Prefix Match (Fuzzy - "собес" in "собеседование")
-        else if (titleWords.some(w => w.includes(value))) {
+        else if (titleWords.some((w) => w.includes(value))) {
           tokenScore = 10;
           matchFound = true;
         }
@@ -150,13 +147,13 @@ export const searchVideos = (videos: VideoItem[], rawQuery: string): VideoItem[]
       score += tokenScore;
     }
 
-    if (!constraintsMet) return {video, score: 0};
+    if (!constraintsMet) return { video, score: 0 };
 
-    return {video, score};
+    return { video, score };
   });
 
   return scoredResults
-    .filter(item => item.score > 0)
+    .filter((item) => item.score > 0)
     .sort((a, b) => {
       // 1. Relevance
       if (b.score !== a.score) return b.score - a.score;
@@ -171,5 +168,5 @@ export const searchVideos = (videos: VideoItem[], rawQuery: string): VideoItem[]
       const titleB = b.video.title ?? b.video.filename ?? '';
       return titleA.localeCompare(titleB);
     })
-    .map(item => item.video);
+    .map((item) => item.video);
 };

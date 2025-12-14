@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs-extra';
 
-dotenv.config({quiet: true});
+dotenv.config({ quiet: true });
 
 // Определяем базовую директорию для данных
 // В Electron (prod) это будет C:\Users\User\AppData\Roaming\LocalVideoViewer

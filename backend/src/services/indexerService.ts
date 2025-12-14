@@ -1,11 +1,11 @@
 import fs from 'fs-extra';
 import path from 'path';
 import pLimit from 'p-limit';
-import chokidar, {FSWatcher} from 'chokidar';
-import {config} from '../config';
+import chokidar, { FSWatcher } from 'chokidar';
+import { config } from '../config';
 import metadataCache from './metadataCache';
-import {Playlist, VideoItem, MinifiedMetadata} from '../schemas/common.schema';
-import {logger} from '../utils/logger';
+import { Playlist, VideoItem, MinifiedMetadata } from '../schemas/common.schema';
+import { logger } from '../utils/logger';
 
 class IndexerService {
   // Используем p-limit v6 (совместимый с CJS) или v7 через import.
@@ -22,7 +22,7 @@ class IndexerService {
 
     this.stop(); // Stop previous watcher if exists
 
-    logger.info({dir: targetDir}, '[WATCHER] Starting watch');
+    logger.info({ dir: targetDir }, '[WATCHER] Starting watch');
     this.currentWatchedDir = targetDir;
 
     this.watcher = chokidar.watch(targetDir, {
@@ -44,7 +44,7 @@ class IndexerService {
 
   public async stop(): Promise<void> {
     if (this.watcher) {
-      logger.info({dir: this.currentWatchedDir}, '[WATCHER] Stopping watch');
+      logger.info({ dir: this.currentWatchedDir }, '[WATCHER] Stopping watch');
       await this.watcher.close();
       this.watcher = null;
       this.currentWatchedDir = null;
@@ -55,96 +55,104 @@ class IndexerService {
     const isJson = filePath.endsWith('.info.json');
     if (!isJson) return;
 
-    if (config.DEBUG_PERF) logger.debug({event, file: path.basename(filePath)}, '[WATCHER] File event');
+    if (config.DEBUG_PERF) logger.debug({ event, file: path.basename(filePath) }, '[WATCHER] File event');
 
     if (event === 'unlink') metadataCache.remove(filePath);
     else if (isJson) await metadataCache.get(filePath);
   }
 
   public async scanPlaylists(dirPath: string): Promise<Playlist[]> {
-    if (!await fs.pathExists(dirPath)) throw new Error('Directory not found');
+    if (!(await fs.pathExists(dirPath))) throw new Error('Directory not found');
 
     this._setupWatcher(dirPath);
 
     const items = await fs.readdir(dirPath);
 
-    const results = await Promise.all(items.map(item => this.limit(async (): Promise<Playlist | null> => {
-      const itemPath = path.join(dirPath, item);
-      let stat;
-      try {
-        stat = await fs.stat(itemPath);
-      } catch (e) {
-        return null;
-      }
-
-      if (!stat.isDirectory()) return null;
-
-      let files;
-      try {
-        files = await fs.readdir(itemPath);
-      } catch (e) {
-        return null;
-      }
-
-      const zeroFile = files.find(f => f.startsWith('000 - '));
-      if (!zeroFile) return null;
-
-      let id: string | null = null;
-      let title = item;
-      let uploader = 'Unknown';
-      let coverPath: string | null = null;
-      let totalDuration = 0;
-
-      const infoFile = files.find(f => f.startsWith('000 - ') && f.endsWith('.info.json'));
-      if (infoFile) {
-        const infoData = await metadataCache.get(path.join(itemPath, infoFile));
-
-        if (infoData.id) id = infoData.id;
-        if (infoData.title) title = infoData.title;
-        if (infoData.uploader) uploader = infoData.uploader;
-
-        const basename = path.basename(infoFile, '.info.json');
-        for (const ext of config.SUPPORTED_IMG_EXT) {
-          if (files.includes(basename + ext)) {
-            coverPath = path.join(itemPath, basename + ext);
-            break;
+    const results = await Promise.all(
+      items.map((item) =>
+        this.limit(async (): Promise<Playlist | null> => {
+          const itemPath = path.join(dirPath, item);
+          let stat;
+          try {
+            stat = await fs.stat(itemPath);
+          } catch (e) {
+            return null;
           }
-        }
-      }
 
-      if (!id) {
-        const match = zeroFile.match(/\[([a-zA-Z0-9_-]+)]/);
-        if (match) id = match[1];
-      }
+          if (!stat.isDirectory()) return null;
 
-      const videoFiles = files.filter(f => config.SUPPORTED_VIDEO_EXT.includes(path.extname(f).toLowerCase() as any));
-      const videoCount = videoFiles.length;
+          let files;
+          try {
+            files = await fs.readdir(itemPath);
+          } catch (e) {
+            return null;
+          }
 
-      await Promise.all(videoFiles.map(vFile => this.limit(async () => {
-        const vBase = path.basename(vFile, path.extname(vFile));
-        const vInfo = vBase + '.info.json';
-        if (files.includes(vInfo)) {
-          const vData = await metadataCache.get(path.join(itemPath, vInfo));
-          if (vData.duration) totalDuration += vData.duration;
-        }
-      })));
+          const zeroFile = files.find((f) => f.startsWith('000 - '));
+          if (!zeroFile) return null;
 
-      return {
-        id,
-        name: item,
-        title,
-        cover: coverPath,
-        videoCount,
-        totalDuration,
-        uploader,
-        updatedAt: stat.mtimeMs,
-      };
-    })));
+          let id: string | null = null;
+          let title = item;
+          let uploader = 'Unknown';
+          let coverPath: string | null = null;
+          let totalDuration = 0;
+
+          const infoFile = files.find((f) => f.startsWith('000 - ') && f.endsWith('.info.json'));
+          if (infoFile) {
+            const infoData = await metadataCache.get(path.join(itemPath, infoFile));
+
+            if (infoData.id) id = infoData.id;
+            if (infoData.title) title = infoData.title;
+            if (infoData.uploader) uploader = infoData.uploader;
+
+            const basename = path.basename(infoFile, '.info.json');
+            for (const ext of config.SUPPORTED_IMG_EXT) {
+              if (files.includes(basename + ext)) {
+                coverPath = path.join(itemPath, basename + ext);
+                break;
+              }
+            }
+          }
+
+          if (!id) {
+            const match = zeroFile.match(/\[([a-zA-Z0-9_-]+)]/);
+            if (match) id = match[1];
+          }
+
+          const videoFiles = files.filter((f) => config.SUPPORTED_VIDEO_EXT.includes(path.extname(f).toLowerCase() as any));
+          const videoCount = videoFiles.length;
+
+          await Promise.all(
+            videoFiles.map((vFile) =>
+              this.limit(async () => {
+                const vBase = path.basename(vFile, path.extname(vFile));
+                const vInfo = vBase + '.info.json';
+                if (files.includes(vInfo)) {
+                  const vData = await metadataCache.get(path.join(itemPath, vInfo));
+                  if (vData.duration) totalDuration += vData.duration;
+                }
+              })
+            )
+          );
+
+          return {
+            id,
+            name: item,
+            title,
+            cover: coverPath,
+            videoCount,
+            totalDuration,
+            uploader,
+            updatedAt: stat.mtimeMs,
+          };
+        })
+      )
+    );
 
     return results.filter((item): item is Playlist => item !== null);
   }
 
-  public async scanPlaylistVideos(dirPath: string, playlistId: string): Promise<{ videos: VideoItem[], title: string } | null> {
+  public async scanPlaylistVideos(dirPath: string, playlistId: string): Promise<{ videos: VideoItem[]; title: string } | null> {
     this._setupWatcher(dirPath);
 
     const items = await fs.readdir(dirPath);
@@ -157,13 +165,14 @@ class IndexerService {
         const stat = await fs.stat(p);
         if (stat.isDirectory()) {
           const f = await fs.readdir(p);
-          const zero = f.find(name => name.startsWith('000 - '));
+          const zero = f.find((name) => name.startsWith('000 - '));
           if (zero && zero.includes(`[${playlistId}]`)) {
             playlistPath = p;
             break;
           }
         }
-      } catch (e) { /* ignore access errors */
+      } catch (e) {
+        /* ignore access errors */
       }
     }
 
@@ -172,68 +181,65 @@ class IndexerService {
     const files = await fs.readdir(playlistPath);
     let playlistTitle = path.basename(playlistPath);
 
-    const plInfoFile = files.find(f => f.startsWith('000 - ') && f.endsWith('.info.json'));
+    const plInfoFile = files.find((f) => f.startsWith('000 - ') && f.endsWith('.info.json'));
     if (plInfoFile) {
       const d = await metadataCache.get(path.join(playlistPath, plInfoFile));
       if (d.title) playlistTitle = d.title;
     }
 
     const videoPromises = files
-      .filter(f => config.SUPPORTED_VIDEO_EXT.includes(path.extname(f).toLowerCase() as any))
-      .map(file => this.limit(async (): Promise<VideoItem> => {
-        const ext = path.extname(file);
-        const basename = path.basename(file, ext);
-        const infoFile = basename + '.info.json';
-        const descFile = basename + '.description';
+      .filter((f) => config.SUPPORTED_VIDEO_EXT.includes(path.extname(f).toLowerCase() as any))
+      .map((file) =>
+        this.limit(async (): Promise<VideoItem> => {
+          const ext = path.extname(file);
+          const basename = path.basename(file, ext);
+          const infoFile = basename + '.info.json';
+          const descFile = basename + '.description';
 
-        const infoFilePath = path.join(playlistPath!, infoFile);
-        const descFilePath = path.join(playlistPath!, descFile);
+          const infoFilePath = path.join(playlistPath!, infoFile);
+          const descFilePath = path.join(playlistPath!, descFile);
 
-        // Явная типизация промисов для Promise.all
-        const [metaDataResult, descResult] = await Promise.all([
-          files.includes(infoFile)
-            ? metadataCache.get(infoFilePath)
-            : Promise.resolve({} as MinifiedMetadata),
+          // Явная типизация промисов для Promise.all
+          const [metaDataResult, descResult] = await Promise.all([
+            files.includes(infoFile) ? metadataCache.get(infoFilePath) : Promise.resolve({} as MinifiedMetadata),
 
-          fs.pathExists(descFilePath).then(exists =>
-            exists ? fs.readFile(descFilePath, 'utf-8').catch(() => '') : ''
-          )
-        ]);
+            fs.pathExists(descFilePath).then((exists) => (exists ? fs.readFile(descFilePath, 'utf-8').catch(() => '') : '')),
+          ]);
 
+          const metadata: MinifiedMetadata = metaDataResult;
+          const description: string = descResult;
 
-        const metadata: MinifiedMetadata = metaDataResult;
-        const description: string = descResult;
-
-        let thumbnail: string | null = null;
-        for (const ie of config.SUPPORTED_IMG_EXT) {
-          if (files.includes(basename + ie)) {
-            thumbnail = path.join(playlistPath!, basename + ie);
-            break;
+          let thumbnail: string | null = null;
+          for (const ie of config.SUPPORTED_IMG_EXT) {
+            if (files.includes(basename + ie)) {
+              thumbnail = path.join(playlistPath!, basename + ie);
+              break;
+            }
           }
-        }
 
-        return {
-          id: metadata.id,
-          filename: file,
-          title: metadata.fulltitle || metadata.title || file,
-          uploader: metadata.uploader,
-          uploader_url: metadata.uploader_url,
-          channel_url: metadata.channel_url,
-          upload_date: metadata.upload_date,
-          timestamp: metadata.timestamp,
-          duration: metadata.duration,
-          description,
-          thumbnail,
-          path: path.join(playlistPath!, file),
-        };
-      }));
+          return {
+            id: metadata.id,
+            filename: file,
+            title: metadata.fulltitle || metadata.title || file,
+            uploader: metadata.uploader,
+            uploader_url: metadata.uploader_url,
+            channel_url: metadata.channel_url,
+            upload_date: metadata.upload_date,
+            timestamp: metadata.timestamp,
+            duration: metadata.duration,
+            description,
+            thumbnail,
+            path: path.join(playlistPath!, file),
+          };
+        })
+      );
 
     const videos = await Promise.all(videoPromises);
-    return {videos, title: playlistTitle};
+    return { videos, title: playlistTitle };
   }
 
   public async scanAllVideos(rootDir: string): Promise<VideoItem[]> {
-    if (!await fs.pathExists(rootDir)) throw new Error('Directory not found');
+    if (!(await fs.pathExists(rootDir))) throw new Error('Directory not found');
 
     this._setupWatcher(rootDir);
     const results: VideoItem[] = [];
@@ -242,7 +248,7 @@ class IndexerService {
       let items: fs.Dirent[] = [];
       try {
         // withFileTypes: true возвращает Dirent[], это ок
-        items = await fs.readdir(dir, {withFileTypes: true});
+        items = await fs.readdir(dir, { withFileTypes: true });
       } catch (e) {
         return; // Возвращаем void (Promise<void>)
       }
@@ -253,8 +259,7 @@ class IndexerService {
       for (const item of items) {
         if (item.isDirectory()) {
           folders.push(path.join(dir, item.name));
-        }
-        else {
+        } else {
           const ext = path.extname(item.name).toLowerCase();
           if (config.SUPPORTED_VIDEO_EXT.includes(ext as any)) {
             files.push(item.name);
@@ -264,68 +269,72 @@ class IndexerService {
 
       if (files.length > 0) {
         let playlistId: string | null | undefined = null;
-        let playlistName = path.basename(dir);
+        const playlistName = path.basename(dir);
 
         try {
           // Читаем просто имена файлов для поиска "000 - [ID]"
           const allFiles = await fs.readdir(dir);
-          const zeroFile = allFiles.find(f => f.startsWith('000 - '));
+          const zeroFile = allFiles.find((f) => f.startsWith('000 - '));
           if (zeroFile) {
             const match = zeroFile.match(/\[([a-zA-Z0-9_-]+)]/);
             if (match) playlistId = match[1];
           }
-        } catch (e) {
+        } catch (_e) {
+          /* empty */
         }
 
-        const filePromises = files.map(filename => this.limit(async () => {
-          const itemPath = path.join(dir, filename);
-          const ext = path.extname(filename).toLowerCase();
-          const basename = path.basename(filename, ext);
-          const infoFile = basename + '.info.json';
+        const filePromises = files.map((filename) =>
+          this.limit(async () => {
+            const itemPath = path.join(dir, filename);
+            const ext = path.extname(filename).toLowerCase();
+            const basename = path.basename(filename, ext);
+            const infoFile = basename + '.info.json';
 
-          let metadata: MinifiedMetadata = {};
-          let thumbnail: string | null = null;
+            let metadata: MinifiedMetadata = {};
+            let thumbnail: string | null = null;
 
-          const infoPath = path.join(dir, infoFile);
-          if (await fs.pathExists(infoPath)) metadata = await metadataCache.get(infoPath);
+            const infoPath = path.join(dir, infoFile);
+            if (await fs.pathExists(infoPath)) metadata = await metadataCache.get(infoPath);
 
-          for (const imgExt of config.SUPPORTED_IMG_EXT) {
-            const thumbPath = path.join(dir, basename + imgExt);
-            if (await fs.pathExists(thumbPath)) {
-              thumbnail = thumbPath;
-              break;
+            for (const imgExt of config.SUPPORTED_IMG_EXT) {
+              const thumbPath = path.join(dir, basename + imgExt);
+              if (await fs.pathExists(thumbPath)) {
+                thumbnail = thumbPath;
+                break;
+              }
             }
-          }
 
-          let ctime = 0;
-          try {
-            const stat = await fs.stat(itemPath);
-            ctime = stat.ctimeMs;
-          } catch (e) {
-          }
+            let ctime = 0;
+            try {
+              const stat = await fs.stat(itemPath);
+              ctime = stat.ctimeMs;
+            } catch (_e) {
+              /* empty */
+            }
 
-          results.push({
-            id: metadata.id || this._extractIdFromFilename(filename),
-            filename: filename,
-            title: metadata.fulltitle || metadata.title || filename,
-            uploader: metadata.uploader,
-            upload_date: metadata.upload_date,
-            timestamp: metadata.timestamp,
-            duration: metadata.duration,
-            thumbnail,
-            path: itemPath,
-            playlistId,
-            playlistName,
-            ctime,
-          });
-        }));
+            results.push({
+              id: metadata.id || this._extractIdFromFilename(filename),
+              filename: filename,
+              title: metadata.fulltitle || metadata.title || filename,
+              uploader: metadata.uploader,
+              upload_date: metadata.upload_date,
+              timestamp: metadata.timestamp,
+              duration: metadata.duration,
+              thumbnail,
+              path: itemPath,
+              playlistId,
+              playlistName,
+              ctime,
+            });
+          })
+        );
 
         await Promise.all(filePromises);
       }
 
       // Рекурсивный вызов. walk возвращает Promise<void>, map -> Promise<void>[], Promise.all -> Promise<void[]>
       // Это корректно, "void return used" быть не должно, если линтер настроен правильно.
-      await Promise.all(folders.map(folder => walk(folder)));
+      await Promise.all(folders.map((folder) => walk(folder)));
     };
 
     await walk(rootDir);

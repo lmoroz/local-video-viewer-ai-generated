@@ -1,4 +1,4 @@
-import {describe, it, expect, vi, beforeEach} from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 // @ts-ignore
 import fs from 'fs-extra';
 
@@ -9,8 +9,8 @@ vi.mock('fs-extra');
 vi.mock('../src/config', () => ({
   config: {
     CACHE_FILE_PATH: '/mock/cache/path.json',
-    DEBUG_PERF: false
-  }
+    DEBUG_PERF: false,
+  },
 }));
 
 // 3. !!! ВАЖНО: Мокаем логгер, чтобы он не пытался создать реальные стримы через замоканный fs
@@ -43,12 +43,12 @@ describe('MetadataCache', () => {
   it('should parse valid JSON and cache it', async () => {
     const mockMtime = 123456789;
     // @ts-ignore
-    fs.stat.mockResolvedValue({mtimeMs: mockMtime});
+    fs.stat.mockResolvedValue({ mtimeMs: mockMtime });
 
     const validData = {
       id: 'vid1',
       title: 'Test Video',
-      duration: 120
+      duration: 120,
     };
     // @ts-ignore
     fs.readJson.mockResolvedValue(validData);
@@ -67,14 +67,10 @@ describe('MetadataCache', () => {
     const mockMtime2 = 2000;
 
     // @ts-ignore
-    fs.stat
-      .mockResolvedValueOnce({mtimeMs: mockMtime1})
-      .mockResolvedValueOnce({mtimeMs: mockMtime2});
+    fs.stat.mockResolvedValueOnce({ mtimeMs: mockMtime1 }).mockResolvedValueOnce({ mtimeMs: mockMtime2 });
 
     // @ts-ignore
-    fs.readJson
-      .mockResolvedValueOnce({title: 'v1'})
-      .mockResolvedValueOnce({title: 'v2'});
+    fs.readJson.mockResolvedValueOnce({ title: 'v1' }).mockResolvedValueOnce({ title: 'v2' });
 
     await metadataCache.get('/tmp/vid.json');
     const result = await metadataCache.get('/tmp/vid.json');
@@ -85,12 +81,12 @@ describe('MetadataCache', () => {
 
   it('should strip invalid fields using Zod schema', async () => {
     // @ts-ignore
-    fs.stat.mockResolvedValue({mtimeMs: 1});
+    fs.stat.mockResolvedValue({ mtimeMs: 1 });
     // @ts-ignore
     fs.readJson.mockResolvedValue({
       id: '123',
       dangerousField: 'DROP TABLE',
-      title: 'Valid'
+      title: 'Valid',
     });
 
     const result = await metadataCache.get('/tmp/safe.json');

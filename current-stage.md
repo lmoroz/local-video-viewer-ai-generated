@@ -19,6 +19,7 @@ A YouTube clone for viewing local video files. The application consists of a bac
     - `zod` (validation)
     - `pino` (logging)
     - `natural` (text processing)
+    - **Linting**: Eslint, Prettier
 
 ### Frontend
 - **Build Tool**: Vite

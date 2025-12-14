@@ -1,4 +1,4 @@
-import {Router} from 'express';
+import { Router } from 'express';
 import * as controller from '../controllers/libraryController';
 
 const router = Router();

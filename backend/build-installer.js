@@ -1,6 +1,6 @@
 const fs = require('fs-extra');
 const path = require('path');
-const {execSync} = require('child_process');
+const { execSync } = require('child_process');
 
 async function build() {
   const frontendSrc = path.join(__dirname, '../frontend/dist');
@@ -30,7 +30,7 @@ async function build() {
     // Убедимся, что TS скомпилирован
     // execSync('npm run build', { stdio: 'inherit' }); // Можно раскомментировать, если запускается отдельно
 
-    execSync('npx electron-builder', {stdio: 'inherit'});
+    execSync('npx electron-builder', { stdio: 'inherit' });
 
     // Очистка (опционально)
     await fs.remove(frontendDest);
@@ -40,7 +40,7 @@ async function build() {
   }
 }
 
-build().catch(err => {
+build().catch((err) => {
   console.error(err);
   process.exit(1);
 });
