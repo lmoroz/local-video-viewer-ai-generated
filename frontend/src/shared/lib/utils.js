@@ -46,4 +46,21 @@ const formatDate = dateStr => {
   return `${d}.${m}.${y}`
 }
 
-export { formatDuration, formatDescription, formatTime, formatDate }
+const sortVideos = (videos, sortBy) => {
+  const sorted = [...videos]
+  switch (sortBy) {
+    case 'title_asc':
+      return sorted.sort((a, b) => a.title.localeCompare(b.title))
+    case 'title_desc':
+      return sorted.sort((a, b) => b.title.localeCompare(a.title))
+    case 'date_asc':
+      return sorted.sort((a, b) => (a.upload_date || '').localeCompare(b.upload_date || ''))
+    case 'date_desc':
+      return sorted.sort((a, b) => (b.upload_date || '').localeCompare(a.upload_date || ''))
+    case 'default':
+    default:
+      return sorted.sort((a, b) => (a.originalIndex || 0) - (b.originalIndex || 0))
+  }
+}
+
+export { formatDuration, formatDescription, formatTime, formatDate, sortVideos }

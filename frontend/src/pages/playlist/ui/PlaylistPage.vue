@@ -2,8 +2,7 @@
   import { ref, computed, onMounted, watch } from 'vue'
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import api from '@/shared/api'
-  import SearchInput from '@/features/search/search-bar/ui/SearchInput.vue'
-  import { formatDuration, formatDate } from '@/shared/lib/utils.js'
+  import { formatDuration, formatDate, sortVideos } from '@/shared/lib/utils.js'
   import { sortingOptions, videoProgress } from '@/entities/settings/model/useSettings'
 
   const props = defineProps({
@@ -47,21 +46,7 @@
   })
 
   const sortedVideos = computed(() => {
-    let sorted = [...videos.value]
-
-    switch (sortBy.value) {
-      case 'title_asc':
-        return sorted.sort((a, b) => a.title.localeCompare(b.title))
-      case 'title_desc':
-        return sorted.sort((a, b) => b.title.localeCompare(a.title))
-      case 'date_asc':
-        return sorted.sort((a, b) => (a.upload_date || '').localeCompare(b.upload_date || ''))
-      case 'date_desc':
-        return sorted.sort((a, b) => (b.upload_date || '').localeCompare(a.upload_date || ''))
-      case 'default':
-      default:
-        return sorted // Original order from backend
-    }
+    return sortVideos(videos.value, sortBy.value)
   })
 
   onMounted(async () => {

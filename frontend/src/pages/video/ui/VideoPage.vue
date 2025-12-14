@@ -2,7 +2,8 @@
   import { ref, computed, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import api from '@/shared/api'
-  import { settings, videoProgress } from '@/entities/settings/model/useSettings'
+  import { settings, videoProgress, sortingOptions } from '@/entities/settings/model/useSettings'
+  import { sortVideos } from '@/shared/lib/utils.js'
 
   const props = defineProps({
     videoId: String,
@@ -75,12 +76,16 @@
 
     try {
       const response = await api.getPlaylistDetails(props.playlistId, props.dir)
-      playlistVideos.value = response.data.videos.map((v, i) => {
+      const mappedVideos = response.data.videos.map((v, i) => {
         return {
           ...v,
           originalIndex: i
         }
       })
+
+      // Apply saved sort order
+      const sortBy = sortingOptions.value[props.playlistId] || 'default'
+      playlistVideos.value = sortVideos(mappedVideos, sortBy)
       playlistTitle.value = response.data.title || props.playlistId
 
       const found = playlistVideos.value.find(v => v.id === props.videoId || v.filename === props.videoId)
