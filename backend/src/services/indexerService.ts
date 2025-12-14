@@ -26,7 +26,7 @@ class IndexerService {
     this.currentWatchedDir = targetDir;
 
     this.watcher = chokidar.watch(targetDir, {
-      ignored: /(^|[\/\\])\../,
+      ignored: /(^|[/\\])\../,
       persistent: true,
       ignoreInitial: true,
       depth: 3,
@@ -75,7 +75,7 @@ class IndexerService {
           let stat;
           try {
             stat = await fs.stat(itemPath);
-          } catch (e) {
+          } catch (_e) {
             return null;
           }
 
@@ -84,7 +84,7 @@ class IndexerService {
           let files;
           try {
             files = await fs.readdir(itemPath);
-          } catch (e) {
+          } catch (_e) {
             return null;
           }
 
@@ -171,7 +171,7 @@ class IndexerService {
             break;
           }
         }
-      } catch (e) {
+      } catch (_e) {
         /* ignore access errors */
       }
     }
@@ -249,7 +249,7 @@ class IndexerService {
       try {
         // withFileTypes: true возвращает Dirent[], это ок
         items = await fs.readdir(dir, { withFileTypes: true });
-      } catch (e) {
+      } catch (_e) {
         return; // Возвращаем void (Promise<void>)
       }
 

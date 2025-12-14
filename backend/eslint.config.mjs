@@ -25,4 +25,17 @@ export default [
   {
     ignores: ['dist/**', 'frontend-dist/**', 'cache/**', 'logs/**', 'build-installer.js', 'utils/**', 'tests/**'],
   },
+
+  {
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+    },
+  },
 ];
