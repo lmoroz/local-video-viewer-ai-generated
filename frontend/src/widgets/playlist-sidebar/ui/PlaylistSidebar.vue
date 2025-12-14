@@ -51,7 +51,7 @@
     }
   }
 
-  watch(() => props.currentVideoId, scrollToActive)
+  watch(() => [props.currentVideoId, props.videos], scrollToActive, { deep: true })
   onMounted(scrollToActive)
 </script>
 

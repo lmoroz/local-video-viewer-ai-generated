@@ -41,7 +41,7 @@ A YouTube clone for viewing local video files. The application consists of a bac
     - **Synchronized sorting**: Playlist sorting preference is preserved when navigating to the video player.
 - View a general list of all videos in a folder sorted by date (using metadata titles).
 - View search results (integrated into the main page).
-- View a list of videos in a playlist (with auto-scrolling to the current video and a counter).
+- View a list of videos in a playlist (with **fixed** auto-scrolling to the current video and a counter).
 - Viewing videos (Video.js).
 - Support for chapters.
 - ID-based routing.
