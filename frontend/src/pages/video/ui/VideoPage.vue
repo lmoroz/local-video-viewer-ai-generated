@@ -98,16 +98,7 @@
     }
   }
 
-  const handleSearch = query => {
-    if (!query.trim()) return
-    router.push({
-      name: 'Search',
-      query: {
-        q: query,
-        dir: props.dir
-      }
-    })
-  }
+
 
   const onSeek = time => {
     if (videoPlayerRef.value) {
@@ -127,6 +118,7 @@
         query: { dir: props.dir }
       }"
       :to-title="playlistTitle"
+      :dir="props.dir"
       :page-title="videoData?.title || videoId" />
 
     <div class="flex flex-col lg:flex-row overflow-hidden gap-9 px-7">

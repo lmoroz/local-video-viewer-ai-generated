@@ -7,14 +7,16 @@
     to: Object,
     toTitle: String,
     pageTitle: String,
-    pageDescr: String
+    pageDescr: String,
+    dir: String // Added dir prop
   })
 
   const handleSearch = query => {
     if (!query.trim()) return
     router.push({
-      name: 'Search',
+      name: 'Home', // Changed to Home
       query: {
+        tab: 'Search', // Switch to Search tab
         q: query,
         dir: props.dir
       }

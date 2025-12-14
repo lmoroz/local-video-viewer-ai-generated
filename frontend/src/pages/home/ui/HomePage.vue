@@ -271,16 +271,30 @@
 
     // Restore tab from URL
     const tabParam = route.query.tab
+    const queryParam = route.query.q
+
     if (tabParam && Object.values(TABS).includes(tabParam)) {
       currentTab.value = tabParam
-      // Data loading for initial tab will happen in watch(currentPath) or explicit call if path already set?
-      // onMounted runs, savedPath sets currentPath.
-      // If savedPath exists, loadPlaylists runs.
-      // We probably need to ensure correct data for the tab is loaded.
-      // If it's VIDEOS, we need to call loadAllVideos.
-      if (tabParam === TABS.VIDEOS && savedPath) loadAllVideos(savedPath)
+      
+      if (tabParam === TABS.VIDEOS && savedPath) {
+        loadAllVideos(savedPath)
+      } else if (tabParam === TABS.SEARCH && queryParam && savedPath) {
+        searchQuery.value = queryParam
+        performSearch(queryParam, savedPath)
+      }
     }
   })
+
+  // Watch for search query changes in URL
+  watch(
+    () => route.query.q,
+    newQuery => {
+      if (newQuery && currentTab.value === TABS.SEARCH) {
+        searchQuery.value = newQuery
+        performSearch(newQuery, currentPath.value)
+      }
+    }
+  )
 </script>
 
 <template>

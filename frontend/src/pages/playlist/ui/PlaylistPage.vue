@@ -84,16 +84,7 @@
     next()
   })
 
-  const handleSearch = query => {
-    if (!query.trim()) return
-    router.push({
-      name: 'Search',
-      query: {
-        q: query,
-        dir: props.dir
-      }
-    })
-  }
+
 </script>
 
 <template>
@@ -101,6 +92,7 @@
     <StickyHeader
       :to="{ name: 'Home', query: { dir: props.dir } }"
       :page-title="playlistTitle"
+      :dir="props.dir"
       :page-descr="dir || '/'" />
 
     <div class="max-w-7xl mx-auto p-8 pt-6">
