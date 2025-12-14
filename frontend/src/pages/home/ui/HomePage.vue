@@ -2,9 +2,7 @@
   import { ref, watch, onMounted, computed } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import api from '@/shared/api'
-
   import { settings, viewOptions } from '@/entities/settings/model/useSettings'
-  import VideoList from '@/widgets/video-list/ui/VideoList.vue'
 
   defineOptions({
     name: 'HomePage'
@@ -306,7 +304,7 @@
       <!-- Tabs & Controls -->
       <div
         v-if="currentPath"
-        class="sticky top-0 z-50 bg-gradient-to-r from-slate-900/50 via-gray-900/50 to-black/50 backdrop-blur-md backdrop-saturate-150 mb-6 border-b border-gray-700 flex flex-wrap items-end justify-between gap-4 pt-4 px-6">
+        class="sticky z-50 bg-gradient-to-r from-slate-900/50 via-gray-900/50 to-black/50 backdrop-blur-md backdrop-saturate-150 mb-6 border-b border-gray-700 flex flex-wrap items-end justify-between gap-4 pt-4 px-6 top-[var(--title-bar-height)]">
         <nav
           class="-mb-px flex space-x-8"
           aria-label="Tabs">

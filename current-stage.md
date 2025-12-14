@@ -9,12 +9,16 @@ A YouTube clone for viewing local video files. The application consists of a bac
 - **Runtime**: Node.js
 - **Framework**: Express.js
 - **Desktop Wrapper**: Electron
+- **Language**: TypeScript
 - **Key Libraries**:
     - `fs-extra` (working with the file system)
     - `cors` (CORS configuration)
     - `lru-cache` (In-Memory cache)
     - `p-limit` (concurrency limiter)
     - `chokidar` (filesystem changes handler)
+    - `zod` (validation)
+    - `pino` (logging)
+    - `natural` (text processing)
 
 ### Frontend
 - **Build Tool**: Vite
@@ -55,14 +59,16 @@ A YouTube clone for viewing local video files. The application consists of a bac
 │   ├── cache/                # File cache folder
 │   ├── src/                  # Separated backend logic sources
 │   │   ├── config/           # config folder
-│   │   ├── conntrollers/     # handlers for api controllers
+│   │   ├── controllers/      # handlers for api controllers
+│   │   ├── electron/         # Electron specific code
+│   │   │   ├── main.ts       # Electron entry point (Main Process)
+│   │   │   └── preload.ts    # Preload script
 │   │   ├── routes/           # api routes
 │   │   ├── services/         # index and cache services
-│   │   ├── utils/            # 
+│   │   ├── utils/            # Utilities
+│   │   └── server.ts         # Express server entry point
 │   ├── build-installer.js    # (electron-builder)
 │   ├── .env                  # Backend environment settings
-│   ├── electron-main.js      # Electron entry point (Main Process)
-│   ├── server.js             # Express сервер (API для работы с файлами)
 │   ├── package.json          # Backend dependencies
 │   └── icon.png              # App icon
 │
@@ -72,17 +78,17 @@ A YouTube clone for viewing local video files. The application consists of a bac
 │   │   ├── app/              # app initialization
 │   │   │   ├── assets/       # global styles and assets
 │   │   │   ├── providers/    # providers config (router)
-│   │   │   ├── App.vue       # Rooot component
+│   │   │   ├── App.vue       # Root component
 │   │   │   └── main.js       # Entry point
 │   │   ├── pages/            # App pages (Flat hierarchy)
-│   │   │   ├── home/         # Select folder, vie playlists list, view all videos sorter or groupped, search results (ui/HomePage.vue)
+│   │   │   ├── home/         # Select folder, view playlists list, view all videos sorted or groupped, search results (ui/HomePage.vue)
 │   │   │   ├── playlist/     # Playlist page (ui/PlaylistPage.vue)
 │   │   │   └── video/        # Video view page (ui/VideoPage.vue)
 │   │   ├── widgets/          # Standalone UI blocks
 │   │   │   ├── chapters-sidebar/ # Chapters sidebar
 │   │   │   ├── playlist-sidebar/ # Playlist sidebar
 │   │   │   └── video-player/     # Video player
-│   │   ├── features/         # Functional  modules
+│   │   ├── features/         # Functional modules
 │   │   │   ├── filesystem/   # (PathInput)
 │   │   │   └── search/       # (SearchInput)
 │   │   ├── entities/         # Business-entities
@@ -103,13 +109,13 @@ A YouTube clone for viewing local video files. The application consists of a bac
 ### Purpose of the main modules
 
 #### Backend
-- **`server.js`**: Express application. Responsible for:
+- **`server.ts`**: Express application. Responsible for:
     - Scanning directories (`/api/playlists`).
     - Retrieving playlist details (`/api/playlist/:id`).
     - Streaming video files (`/api/video`).
     - Searching for videos (`/api/search`).
     - CORS configuration for development.
-- **`electron-main.js`**: Creates the application window. Runs `server.js` in production mode or connects to it. Manages the lifecycle.
+- **`electron/main.ts`**: Creates the application window. Runs `server.ts` logic. Manages the lifecycle.
 
 #### Frontend (FSD Architecture)
 - **`app`**: Initialization layer. Contains global styles, router, and entry point.
@@ -117,6 +123,9 @@ A YouTube clone for viewing local video files. The application consists of a bac
 - **`widgets`**: Large independent blocks.
     - **`VideoPlayer`**: Wrapper over Video.js with custom UI.
     - **`PlaylistSidebar`**: Sidebar with a list of videos.
+    - **`WindowTitleBar`**: Custom title bar for Electron (Windows-style controls).
+    - **`HomeButton`**: Navigation button to return to the home page.
+    - **`StickyHeader`**: Unified sticky header for pages.
 - **`features`**: Specific user scenarios.
     - **`PathInput`**: Entering the path to the history folder.
     - **`SearchInput`**: Global search.

@@ -1,7 +1,7 @@
-import {app, BrowserWindow, protocol, net, ipcMain, shell} from 'electron';
+import { app, protocol, net, ipcMain, shell, BrowserWindow } from 'electron';
 import path from 'path';
-import {pathToFileURL} from 'url';
-import {existsSync} from 'fs';
+import { pathToFileURL } from 'url';
+import { existsSync } from 'fs';
 // Импортируем server ПОСЛЕ установки переменных окружения, если это возможно,
 // но так как import всплывают, мы установим переменную в самом начале main.ts
 // Однако лучше передать путь в функцию startServer, но для минимальных изменений кода используем env.
@@ -9,7 +9,7 @@ import {existsSync} from 'fs';
 // !!! ВАЖНО: Устанавливаем путь для данных приложения
 process.env.APP_USER_DATA = app.getPath('userData');
 
-import {startServer} from '../server';
+import { startServer } from '../server';
 
 let mainWindow: BrowserWindow | null;
 const isDev = !app.isPackaged;
@@ -32,17 +32,17 @@ async function createWindow() {
 
       if (!existsSync(filePath)) {
         console.error('--- [ERROR] File NOT found on disk!');
-        return new Response(`File not found: ${filePath}`, {status: 404});
+        return new Response(`File not found: ${filePath}`, { status: 404 });
       }
 
       const fileUrl = pathToFileURL(filePath).toString();
       return net.fetch(fileUrl).catch(err => {
         console.error('--- [ERROR] net.fetch failed:', err);
-        return new Response('Internal Error', {status: 500});
+        return new Response('Internal Error', { status: 500 });
       });
     } catch (error) {
       console.error('--- [CRITICAL ERROR] inside protocol handler:', error);
-      return new Response('Handler Error', {status: 500});
+      return new Response('Handler Error', { status: 500 });
     }
   });
 
@@ -52,6 +52,12 @@ async function createWindow() {
     width: 1280,
     height: 800,
     icon: path.join(__dirname, '../icon.png'),
+    frame: false,        // Убираем рамки
+    backgroundMaterial: 'acrylic', // https://www.electronjs.org/docs/latest/api/browser-window#winsetbackgroundmaterialmaterial-windows
+    autoHideMenuBar: true,
+    // fullscreenable: true,
+    // hasShadow: true,
+    // roundedCorners: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -62,9 +68,9 @@ async function createWindow() {
   };
 
   const registerHandlers = (win: BrowserWindow) => {
-    win.webContents.setWindowOpenHandler(({url}) => {
+    win.webContents.setWindowOpenHandler(({ url }) => {
       shell.openExternal(url);
-      return {action: 'deny'};
+      return { action: 'deny' };
     });
 
     win.webContents.on('did-finish-load', () => {
@@ -79,9 +85,11 @@ async function createWindow() {
     });
   };
 
+  // @ts-ignore
   mainWindow = new BrowserWindow(windowConfig);
 
   ipcMain.on('open-new-window', async (_event, routePath) => {
+    // @ts-ignore
     let win: BrowserWindow | null = new BrowserWindow(windowConfig);
     registerHandlers(win);
     await win.loadURL(`lmorozlvp://app/index.html#${routePath}`);
@@ -98,8 +106,28 @@ async function createWindow() {
   });
 }
 
+// Global IPC Handlers
+ipcMain.on('window-minimize', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  win?.minimize();
+});
+
+ipcMain.on('window-toggle-maximize', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win?.isMaximized()) {
+    win.unmaximize();
+  } else {
+    win?.maximize();
+  }
+});
+
+ipcMain.on('window-close', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  win?.close();
+});
+
 protocol.registerSchemesAsPrivileged([
-  {scheme: 'lmorozlvp', privileges: {standard: true, secure: true, supportFetchAPI: true, corsEnabled: true}},
+  { scheme: 'lmorozlvp', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } },
 ]);
 
 app.on('ready', createWindow);

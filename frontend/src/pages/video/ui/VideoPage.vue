@@ -115,24 +115,14 @@
 
 <template>
   <div class="min-h-screen text-white">
-    <!-- Header -->
-    <div class="sticky top-0 z-20 p-4 pl-20 flex items-center gap-4 shadow-md bg-[#0f0f0f]">
-      <router-link
-        :to="{
-          name: 'Playlist',
-          params: { id: props.playlistId },
-          query: { dir: props.dir }
-        }"
-        class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors text-gray-300 hover:text-white">
-        <i class="bi bi-arrow-left text-xl" />
-        <span class="font-medium">{{ playlistTitle }}</span>
-      </router-link>
-      <div class="h-6 w-px bg-gray-700 mx-2" />
-      <h1 class="text-lg font-semibold truncate text-gray-100 flex-1">{{ videoData?.title || videoId }}</h1>
-      <div class="w-64">
-        <SearchInput @search="handleSearch" />
-      </div>
-    </div>
+    <StickyHeader
+      :to="{
+        name: 'Playlist',
+        params: { id: props.playlistId },
+        query: { dir: props.dir }
+      }"
+      :to-title="playlistTitle"
+      :page-title="videoData?.title || videoId" />
 
     <div class="flex flex-col lg:flex-row overflow-hidden gap-9 px-7">
       <!-- Left Column: Video + Info (Scrollable) -->

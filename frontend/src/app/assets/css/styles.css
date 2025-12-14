@@ -4,18 +4,24 @@
 :root {
     color-scheme: dark;
     font-family: Roboto, Arial, sans-serif;
-    --color-black: rgb(15, 15, 15)
+    --color-black: rgb(15, 15, 15);
+    --title-bar-height: 0px;
+}
+
+html,
+#app {
+    background: transparent;
 }
 
 body {
     @apply bg-black text-gray-100;
 }
 
-body:after {
-    content: "";
-    pointer-events: none;
-    z-index: -1;
-    position: fixed;
-    inset: 0;
-    background: url('@/app/assets/images/nano-banana-2-693d4a5dacec79b34ad04267.webp') no-repeat center center/cover;
+body.is-electron {
+    --title-bar-height: 32px;
+    background: transparent;
+}
+
+body.is-electron #app {
+    padding-top: var(--title-bar-height);
 }

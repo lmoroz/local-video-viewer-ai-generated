@@ -1,15 +1,22 @@
 <script setup>
-  import { onBeforeMount, onBeforeUnmount } from 'vue'
+  import { onBeforeMount, onBeforeUnmount, onMounted } from 'vue'
   import { fadeIn, fadeOut } from '@/shared/lib/animations.js'
   import useMuddleClickHandler from '@/shared/lib/useMuddleClickHandler.js'
-  import HomeButton from '@/widgets/home-button/ui/HomeButton.vue'
+
+  const isElectron = 'electronAPI' in window
 
   onBeforeMount(() => document.addEventListener('auxclick', useMuddleClickHandler))
   onBeforeUnmount(() => document.removeEventListener('auxclick', useMuddleClickHandler))
+
+  onMounted(() => {
+    if (isElectron) {
+      document.body.classList.add('is-electron')
+    }
+  })
 </script>
 
 <template>
-  <HomeButton />
+  <WindowTitleBar v-if="isElectron" />
   <router-view v-slot="{ Component }">
     <transition
       @enter="fadeIn"

@@ -32,7 +32,7 @@
 <template>
   <div class="relative w-full max-w-md">
     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-      <i class="bi bi-search text-gray-400"></i>
+      <i class="bi bi-search text-gray-400"/>
     </div>
     <input
       v-model="query"

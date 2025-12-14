@@ -113,26 +113,10 @@
 
 <template>
   <div class="min-h-screen">
-    <!-- Fixed Header -->
-    <div class="sticky top-0 z-10 backdrop-blur-sm border-b border-gray-800 shadow-md">
-      <div class="max-w-7xl mx-auto px-8 pl-20 py-4 flex items-center gap-4">
-        <router-link
-          :to="{ name: 'Home', query: { dir: props.dir } }"
-          class="p-2 rounded-full hover:bg-gray-700 transition-colors group"
-          :title="'Back to ' + (dir || 'Home')">
-          <i class="bi bi-arrow-left text-xl text-gray-400 group-hover:text-white transition-colors" />
-        </router-link>
-        <div class="flex flex-col">
-          <h1 class="text-xl font-bold text-white truncate">{{ playlistTitle }}</h1>
-          <span class="text-xs text-gray-500 font-mono">{{ dir || '/' }}</span>
-        </div>
-
-        <div class="flex-grow" />
-        <div class="w-64">
-          <SearchInput @search="handleSearch" />
-        </div>
-      </div>
-    </div>
+    <StickyHeader
+      :to="{ name: 'Home', query: { dir: props.dir } }"
+      :page-title="playlistTitle"
+      :page-descr="dir || '/'" />
 
     <div class="max-w-7xl mx-auto p-8 pt-6">
       <div
