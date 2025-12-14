@@ -220,6 +220,7 @@ class IndexerService {
           uploader_url: metadata.uploader_url,
           channel_url: metadata.channel_url,
           upload_date: metadata.upload_date,
+          timestamp: metadata.timestamp,
           duration: metadata.duration,
           description,
           thumbnail,
@@ -286,9 +287,7 @@ class IndexerService {
           let thumbnail: string | null = null;
 
           const infoPath = path.join(dir, infoFile);
-          if (await fs.pathExists(infoPath)) {
-            metadata = await metadataCache.get(infoPath);
-          }
+          if (await fs.pathExists(infoPath)) metadata = await metadataCache.get(infoPath);
 
           for (const imgExt of config.SUPPORTED_IMG_EXT) {
             const thumbPath = path.join(dir, basename + imgExt);
@@ -311,6 +310,7 @@ class IndexerService {
             title: metadata.fulltitle || metadata.title || filename,
             uploader: metadata.uploader,
             upload_date: metadata.upload_date,
+            timestamp: metadata.timestamp,
             duration: metadata.duration,
             thumbnail,
             path: itemPath,

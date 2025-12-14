@@ -39,7 +39,7 @@ const streams = [
     stream: fs.createWriteStream(logFilePath, {flags: 'a'}),
   },
   // Консоль добавляем только в Dev-режиме
-  ...(isDev ? [{stream: prettyStream}] : []),
+  ...(isDev && config.DEBUG_PERF ? [{stream: prettyStream}] : []),
 ];
 
 export const logger = pino(

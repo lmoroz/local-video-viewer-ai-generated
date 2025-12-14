@@ -2,6 +2,7 @@ import {Request, Response} from 'express';
 import indexer from '../services/indexerService';
 import path from 'path';
 import {ScanQuerySchema, SearchQuerySchema} from '../schemas/common.schema';
+import * as searchService from '../services/searchService';
 import {logger} from '../utils/logger';
 
 export const getPlaylists = async (req: Request, res: Response) => {
@@ -91,19 +92,13 @@ export const getAllVideos = async (req: Request, res: Response) => {
 export const search = async (req: Request, res: Response) => {
   const validation = SearchQuerySchema.safeParse(req.query);
 
-  if (!validation.success) {
-    return res.status(400).json({error: validation.error.issues[0].message});
-  }
+  if (!validation.success) return res.status(400).json({error: validation.error.issues[0].message});
 
   const {dir, query} = validation.data;
 
   try {
     const allVideos = await indexer.scanAllVideos(dir);
-    const lowerQuery = query.toLowerCase();
-
-    const results = allVideos.filter(video => {
-      return video.filename.toLowerCase().includes(lowerQuery);
-    });
+    const results = searchService.searchVideos(allVideos, query);
 
     res.json(results);
   } catch (err) {

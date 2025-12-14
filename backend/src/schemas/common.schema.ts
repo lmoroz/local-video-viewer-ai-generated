@@ -7,6 +7,7 @@ export const MinifiedMetadataSchema = z.object({
   fulltitle: z.string().optional(),
   uploader: z.string().optional(),
   upload_date: z.string().optional(),
+  timestamp: z.number().optional(),
   duration: z.number().optional(),
   uploader_url: z.string().optional(),
   channel_url: z.string().optional(),
@@ -22,6 +23,7 @@ export const VideoItemSchema = MinifiedMetadataSchema.extend({
   playlistId: z.string().nullable().optional(),
   playlistName: z.string().optional(),
   ctime: z.number().optional(),
+  timestamp: z.number().optional(),
   description: z.string().optional(),
 });
 
