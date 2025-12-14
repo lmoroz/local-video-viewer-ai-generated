@@ -417,7 +417,7 @@
               class="mb-8">
               <h2
                 v-if="group.title"
-                class="sticky top-[76px] z-40 bg-black/80 backdrop-blur-md backdrop-saturate-150 py-2 px-6 text-xl font-bold text-white mb-4 flex items-center gap-2 border-b border-gray-800">
+                class="sticky top-[calc(var(--title-bar-height)_+_80px)] z-40 bg-black/80 backdrop-blur-md backdrop-saturate-150 py-2 px-6 text-xl font-bold text-white mb-4 flex items-center gap-2 border-b border-gray-800">
                 <i
                   v-if="videoGroupOption === 'date'"
                   class="bi bi-calendar3 text-blue-500" />
@@ -459,7 +459,7 @@
               class="mb-8">
               <h2
                 v-if="group.title"
-                class="sticky top-[76px] z-40 bg-black/80 backdrop-blur-md backdrop-saturate-150 py-2 px-6 rounded-xl text-xl font-bold text-white mb-4 flex items-center gap-2 border-b border-gray-800">
+                class="sticky top-[calc(var(--title-bar-height)_+_80px)] z-40 bg-black/80 backdrop-blur-md backdrop-saturate-150 py-2 px-6 rounded-xl text-xl font-bold text-white mb-4 flex items-center gap-2 border-b border-gray-800">
                 <i
                   v-if="searchGroupOption === 'date'"
                   class="bi bi-calendar3 text-blue-500" />
