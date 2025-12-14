@@ -86,6 +86,7 @@ A YouTube clone for viewing local video files. The application consists of a bac
 │   │   │   ├── playlist/     # Playlist page (ui/PlaylistPage.vue)
 │   │   │   └── video/        # Video view page (ui/VideoPage.vue)
 │   │   ├── widgets/          # Standalone UI blocks
+│   │   │   ├── just-button/      # Generic button
 │   │   │   ├── chapters-sidebar/ # Chapters sidebar
 │   │   │   ├── playlist-sidebar/ # Playlist sidebar
 │   │   │   └── video-player/     # Video player
@@ -126,6 +127,7 @@ A YouTube clone for viewing local video files. The application consists of a bac
     - **`PlaylistSidebar`**: Sidebar with a list of videos.
     - **`WindowTitleBar`**: Custom title bar for Electron (Windows-style controls).
     - **`HomeButton`**: Navigation button to return to the home page.
+    - **`JustButton`**: Generic button component.
     - **`StickyHeader`**: Unified sticky header for pages.
 - **`features`**: Specific user scenarios.
     - **`PathInput`**: Entering the path to the history folder.
