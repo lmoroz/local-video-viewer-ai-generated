@@ -56,9 +56,9 @@ A YouTube clone for viewing local video files. The application consists of a bac
 
 ```text
 .
-├── dist/                     # Compiled app
 ├── backend/                  # Backend app part (Node.js + Electron)
 │   ├── cache/                # File cache folder
+│   ├── dist/                 # Backend compiled code
 │   ├── src/                  # Separated backend logic sources
 │   │   ├── config/           # config folder
 │   │   ├── controllers/      # handlers for api controllers
@@ -66,11 +66,13 @@ A YouTube clone for viewing local video files. The application consists of a bac
 │   │   │   ├── main.ts       # Electron entry point (Main Process)
 │   │   │   └── preload.ts    # Preload script
 │   │   ├── routes/           # api routes
-│   │   ├── services/         # index and cache services
+│   │   ├── schemas/          # Zod validation schemas
+│   │   ├── services/         # Business logic services
 │   │   ├── utils/            # Utilities
 │   │   └── server.ts         # Express server entry point
 │   ├── build-installer.js    # (electron-builder)
 │   ├── .env                  # Backend environment settings
+│   ├── tsconfig.json         # TypeScript config
 │   ├── package.json          # Backend dependencies
 │   └── icon.png              # App icon
 │
@@ -82,24 +84,31 @@ A YouTube clone for viewing local video files. The application consists of a bac
 │   │   │   ├── providers/    # providers config (router)
 │   │   │   ├── App.vue       # Root component
 │   │   │   └── main.js       # Entry point
-│   │   ├── pages/            # App pages (Flat hierarchy)
-│   │   │   ├── home/         # Select folder, view playlists list, view all videos sorted or groupped, search results (ui/HomePage.vue)
-│   │   │   ├── playlist/     # Playlist page (ui/PlaylistPage.vue)
-│   │   │   └── video/        # Video view page (ui/VideoPage.vue)
-│   │   ├── widgets/          # Standalone UI blocks
-│   │   │   ├── just-button/      # Generic button
-│   │   │   ├── chapters-sidebar/ # Chapters sidebar
-│   │   │   ├── playlist-sidebar/ # Playlist sidebar
-│   │   │   └── video-player/     # Video player
-│   │   ├── features/         # Functional modules
-│   │   │   ├── filesystem/   # (PathInput)
-│   │   │   └── search/       # (SearchInput)
 │   │   ├── entities/         # Business-entities
 │   │   │   ├── settings/     # Settings model (useSettings)
 │   │   │   └── video/        # Video info and description (VideoInfo)
+│   │   ├── features/         # Functional modules
+│   │   │   ├── filesystem/   # Path selection (PathInput)
+│   │   │   ├── search/       # Search functionality (SearchInput)
+│   │   ├── pages/            # App pages (Flat hierarchy)
+│   │   │   ├── home/         # Home page (ui/HomePage.vue)
+│   │   │   ├── playlist/     # Playlist page (ui/PlaylistPage.vue)
+│   │   │   ├── search/       # Search results page (ui/SearchPage.vue)
+│   │   │   └── video/        # Video view page (ui/VideoPage.vue)
 │   │   ├── shared/           # Shared entities
 │   │   │   ├── api/          # API-client
-│   │   │   └── lib/          # Utils (utils.js, animations.js, clickhandler)
+│   │   │   ├── lib/          # Utils (utils.js, animations.js)
+│   │   │   └── ui/           # Shared UI components
+│   │   ├── widgets/          # Standalone UI blocks
+│   │   │   ├── chapters-sidebar/ # Chapters sidebar
+│   │   │   ├── home-button/      # Global home navigation button
+│   │   │   ├── just-button/      # Generic button component
+│   │   │   ├── list-card/        # Card component for lists
+│   │   │   ├── playlist-sidebar/ # Playlist sidebar
+│   │   │   ├── sticky-header/    # Common sticky header
+│   │   │   ├── video-list/       # List of videos
+│   │   │   ├── video-player/     # Video player wrapper
+│   │   │   └── window-title-bar/ # Custom title bar
 │   │   ├── index.html        # HTML template
 │   │   ├── vite.config.js    # Vite config
 │   │   └── package.json      # Frontend dependencies
