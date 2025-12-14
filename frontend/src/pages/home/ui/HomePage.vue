@@ -1,6 +1,6 @@
 <script setup>
   import { ref, watch, onMounted, computed } from 'vue'
-  import { useRouter, useRoute } from 'vue-router'
+  import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
   import api from '@/shared/api'
   import { settings, viewOptions } from '@/entities/settings/model/useSettings'
 
@@ -46,6 +46,22 @@
   const searchGroupOption = computed({
     get: () => viewOptions.value.searchGroup || 'none',
     set: val => (viewOptions.value.searchGroup = val)
+  })
+
+  // Scroll Restoration
+  const restoreScroll = () => {
+    setTimeout(() => {
+      const savedScroll = sessionStorage.getItem('home-scroll-pos')
+      if (savedScroll) {
+        window.scrollTo(0, parseInt(savedScroll))
+        sessionStorage.removeItem('home-scroll-pos')
+      }
+    }, 100)
+  }
+
+  onBeforeRouteLeave((to, from, next) => {
+    sessionStorage.setItem('home-scroll-pos', window.scrollY)
+    next()
   })
 
   const groupVideoList = (list, groupBy) => {
@@ -277,12 +293,15 @@
       currentTab.value = tabParam
       
       if (tabParam === TABS.VIDEOS && savedPath) {
-        loadAllVideos(savedPath)
+        await loadAllVideos(savedPath)
       } else if (tabParam === TABS.SEARCH && queryParam && savedPath) {
         searchQuery.value = queryParam
-        performSearch(queryParam, savedPath)
+        await performSearch(queryParam, savedPath)
       }
     }
+    
+    // Attempt scroll restoration after data load
+    restoreScroll()
   })
 
   // Watch for search query changes in URL

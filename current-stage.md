@@ -48,7 +48,8 @@ A YouTube clone for viewing local video files. The application consists of a bac
 - Global “Home” button.
 - Dark theme with **Glassmorphism effects** in the header.
 - Video viewing progress (Local Storage) displayed on video cards.
-- **Smart Scroll Restoration**: Instant return to the home page without reloading (KeepAlive).
+- **Improved 'Back' button behavior**: Mimics browser history navigation (window.history) with fallback logic.
+- **Smart Scroll Restoration**: Remembers scroll position on the Home page when navigating away and restores it upon return.
 
 ## Project Structure
 
