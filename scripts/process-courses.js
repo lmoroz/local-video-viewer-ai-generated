@@ -114,31 +114,87 @@ async function extractThumbnail(videoPath, outputPath) {
 }
 
 /**
- * Сливает несколько видео в одно с chapters
+ * Ищет файл субтитров для видео
+ */
+async function findSubtitle(videoPath) {
+  const dir = path.dirname(videoPath);
+  const ext = path.extname(videoPath);
+  const basename = path.basename(videoPath, ext);
+  
+  // Варианты названий субтитров
+  const candidates = [
+    `${basename}.vtt`,
+    `${basename}.srt`,
+    `${basename} English.vtt`, // Специфично для этого курса
+    `${basename} English.srt`,
+    `${basename}.en.vtt`,
+    `${basename}.en.srt`
+  ];
+
+  for (const name of candidates) {
+    const subPath = path.join(dir, name);
+    try {
+      await fs.access(subPath);
+      return subPath;
+    } catch {}
+  }
+  
+  return null;
+}
+
+/**
+ * Сливает несколько видео в одно с chapters и субтитрами
  */
 async function mergeVideosWithChapters(videos, outputPath, courseDir) {
   if (CONFIG.dryRun) {
-    log(`[DRY-RUN] Слияние ${videos.length} видео в: ${path.basename(outputPath)}`, 'verbose');
+    log(`[DRY-RUN] Слияние ${videos.length} видео с субтитрами в: ${path.basename(outputPath)}`, 'verbose');
     return { duration: 0, chapters: [] };
   }
 
-  // Создаём временный файл со списком видео
-  const listPath = path.join(courseDir, '.concat-list.txt');
-  // Используем абсолютные пути с forward slashes для ffmpeg
-  const listContent = videos.map(v => {
-    const absPath = path.resolve(v.path).replace(/\\/g, '/');
-    return `file '${absPath}'`;
-  }).join('\n');
-  await fs.writeFile(listPath, listContent, 'utf-8');
+  const tempFiles = []; // Временные файлы с вшитыми субтитрами
 
   try {
-    // Сливаем видео в MKV (поддерживает любые кодеки и chapters)
+    // Подготовка списка файлов для слияния
+    const listPath = path.join(courseDir, '.concat-list.txt');
+    
+    const listLines = [];
+    
+    for (const video of videos) {
+      const subPath = await findSubtitle(video.path);
+      let inputPath = video.path;
+
+      // Если есть субтитры, муксим их во временный файл перед слиянием
+      if (subPath) {
+        log(`Вшивание субтитров для: ${video.name}`, 'verbose');
+        const tempMkv = path.join(courseDir, `.temp-${generateId(video.name)}.mkv`);
+        
+        // ffmpeg -i video -i sub -map 0 -map 1 -c copy -c:s copy ...
+        // Используем webvtt или srt
+        try {
+          execSync(
+            `ffmpeg -i "${video.path}" -i "${subPath}" -map 0 -map 1 -c copy -c:s copy -metadata:s:s:0 language=eng -y "${tempMkv}"`,
+            { stdio: 'pipe' }
+          );
+          inputPath = tempMkv;
+          tempFiles.push(tempMkv);
+        } catch (e) {
+          log(`Ошибка вшивания субтитров для ${video.name}, используем оригинал: ${e.message}`, 'warn');
+        }
+      }
+
+      const absPath = path.resolve(inputPath).replace(/\\/g, '/');
+      listLines.push(`file '${absPath}'`);
+    }
+    
+    await fs.writeFile(listPath, listLines.join('\n'), 'utf-8');
+
+    // Сливаем видео в MKV (поддерживает любые кодеки, chapters и субтитры)
     execSync(
       `ffmpeg -f concat -safe 0 -i "${listPath}" -c copy -y "${outputPath}"`,
       { stdio: 'pipe' }
     );
 
-    // Вычисляем chapters
+    // Вычисляем chapters (тайминги субтитров ffmpeg обрабатывает сам при concat!)
     let currentTime = 0;
     const chapters = [];
 
@@ -155,14 +211,24 @@ async function mergeVideosWithChapters(videos, outputPath, courseDir) {
       currentTime += duration;
     }
 
-    // Удаляем временный файл
+    // Удаляем временный файл списка
     await fs.unlink(listPath);
+    
+    // Удаляем временные файлы с субтитрами
+    for (const temp of tempFiles) {
+      await fs.unlink(temp).catch(() => {});
+    }
 
     log(`Видео объединено: ${path.basename(outputPath)} (${chapters.length} глав)`, 'verbose');
     return { duration: currentTime, chapters };
 
   } catch (error) {
+    // Чистим за собой в случае ошибки
+    const listPath = path.join(courseDir, '.concat-list.txt');
     await fs.unlink(listPath).catch(() => {});
+    for (const temp of tempFiles) {
+      await fs.unlink(temp).catch(() => {});
+    }
     throw error;
   }
 }
@@ -517,6 +583,25 @@ async function processCourse(courseDir) {
         log(`Переименован .description: ${path.basename(newDescriptionFilename)}`, 'verbose');
       } else {
         log(`[DRY-RUN] Переименование .description: ${path.basename(newDescriptionFilename)}`, 'verbose');
+      }
+    }
+
+    // Переименовываем субтитры, если они существуют (для плоской структуры)
+    const subPath = await findSubtitle(video.path);
+    if (subPath) {
+      const subExt = path.extname(subPath);
+      // Если название заканчивалось на " English.vtt", можно попробовать сохранить метку языка,
+      // но для простоты переименуем в [NNN] - [Title] [ID].vtt, плееры это понимают.
+      const newSubFilename = `${String(videoIndex).padStart(3, '0')} - ${cleanBasename} [${videoId}]${subExt}`;
+      const newSubPath = path.join(courseDir, newSubFilename);
+
+      if (subPath !== newSubPath) {
+        if (!CONFIG.dryRun) {
+          await fs.rename(subPath, newSubPath);
+          log(`Переименованы субтитры: ${path.basename(newSubFilename)}`, 'verbose');
+        } else {
+          log(`[DRY-RUN] Переименование субтитров: ${path.basename(newSubFilename)}`, 'verbose');
+        }
       }
     }
     
