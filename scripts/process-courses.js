@@ -484,8 +484,44 @@ async function processCourse(courseDir) {
     const hasInfo = fsSync.existsSync(infoPath);
     const hasThumbnail = fsSync.existsSync(thumbnailPath);
     
+    // Функция очистки исходных файлов
+    const cleanupFolderFiles = async () => {
+      if (CONFIG.dryRun) return;
+      
+      // Защита: проверяем, что merged файл существует и имеет размер > 0
+      if (!fsSync.existsSync(mergedPath) || fsSync.statSync(mergedPath).size === 0) {
+        log(`⚠ Пропуск очистки: целевой файл ${mergedFilename} не найден или пуст`, 'warn');
+        return;
+      }
+
+      log(`Очистка исходных файлов в: ${folder.name}`, 'verbose');
+      
+      for (const video of folder.videos) {
+        try {
+          if (fsSync.existsSync(video.path)) await fs.unlink(video.path);
+          
+          const subPath = await findSubtitle(video.path);
+          if (subPath && fsSync.existsSync(subPath)) await fs.unlink(subPath);
+          
+          const descPath = video.path.replace(path.extname(video.path), '.description');
+          if (fsSync.existsSync(descPath)) await fs.unlink(descPath);
+        } catch (e) {
+          log(`Ошибка удаления файлов для ${video.name}: ${e.message}`, 'warn');
+        }
+      }
+
+      // Пытаемся удалить папку, если она пуста
+      try {
+        await fs.rmdir(folder.path);
+        log(`Удалена пустая папка: ${folder.name}`, 'verbose');
+      } catch (e) {
+        log(`Папка оставлена (содержит другие файлы): ${folder.name}`, 'verbose');
+      }
+    };
+
     if (alreadyMerged && hasInfo && hasThumbnail) {
       log(`⏭  Вложенная папка "${folder.name}" уже обработана, пропускаем`, 'verbose');
+      await cleanupFolderFiles();
       processedVideos.push({ path: mergedPath, thumbnailPath });
       videoIndex++;
       continue;
@@ -523,11 +559,8 @@ async function processCourse(courseDir) {
 
     processedVideos.push({ path: mergedPath, thumbnailPath });
 
-    // Удаляем вложенную папку, если она содержит только видео
-    if (folder.hasOnlyVideos && !CONFIG.dryRun && fsSync.existsSync(folder.path)) {
-      await fs.rm(folder.path, { recursive: true, force: true });
-      log(`Удалена папка: ${folder.name}`, 'verbose');
-    }
+    // Очищаем исходники
+    await cleanupFolderFiles();
 
     videoIndex++
   }
