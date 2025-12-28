@@ -17,9 +17,10 @@ export const getPlaylists = async (req: Request, res: Response) => {
   try {
     const playlists = await indexer.scanPlaylists(dir);
     res.json(playlists);
-  } catch (err: any) {
+  } catch (err) {
+    const error = err as Error;
     logger.error({ err }, 'Failed to get playlists');
-    if (err.message === 'Directory not found') {
+    if (error.message === 'Directory not found') {
       return res.status(404).json({ error: 'Directory not found' });
     }
     res.status(500).json({ error: 'Internal server error' });
@@ -82,9 +83,10 @@ export const getAllVideos = async (req: Request, res: Response) => {
     });
 
     res.json(videos);
-  } catch (err: any) {
+  } catch (err) {
+    const error = err as Error;
     logger.error({ err }, 'Failed to scan all videos');
-    if (err.message === 'Directory not found') return res.status(404).json({ error: 'Directory not found' });
+    if (error.message === 'Directory not found') return res.status(404).json({ error: 'Directory not found' });
     res.status(500).json({ error: 'Internal server error' });
   }
 };

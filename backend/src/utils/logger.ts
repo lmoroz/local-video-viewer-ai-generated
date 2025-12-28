@@ -1,4 +1,5 @@
 import pino from 'pino';
+import { Request } from 'express';
 import path from 'path';
 import fs from 'fs-extra';
 import pinoHttp from 'pino-http';
@@ -54,6 +55,6 @@ export const logger = pino(
 export const requestLogger = pinoHttp({
   logger,
   autoLogging: {
-    ignore: (req: any) => req.url?.startsWith('/file'),
+    ignore: (req: Request) => req.url?.startsWith('/file'),
   },
 });
