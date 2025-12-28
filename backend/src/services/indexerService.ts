@@ -119,7 +119,10 @@ class IndexerService {
             if (match) id = match[1];
           }
 
-          const videoFiles = files.filter((f) => config.SUPPORTED_VIDEO_EXT.includes(path.extname(f).toLowerCase() as any));
+          const videoFiles = files.filter((f) => {
+            const ext = path.extname(f).toLowerCase();
+            return (config.SUPPORTED_VIDEO_EXT as readonly string[]).includes(ext);
+          });
           const videoCount = videoFiles.length;
 
           await Promise.all(
@@ -188,7 +191,10 @@ class IndexerService {
     }
 
     const videoPromises = files
-      .filter((f) => config.SUPPORTED_VIDEO_EXT.includes(path.extname(f).toLowerCase() as any))
+      .filter((f) => {
+        const ext = path.extname(f).toLowerCase();
+        return (config.SUPPORTED_VIDEO_EXT as readonly string[]).includes(ext);
+      })
       .map((file) =>
         this.limit(async (): Promise<VideoItem> => {
           const ext = path.extname(file);
@@ -262,7 +268,7 @@ class IndexerService {
           folders.push(path.join(dir, item.name));
         } else {
           const ext = path.extname(item.name).toLowerCase();
-          if (config.SUPPORTED_VIDEO_EXT.includes(ext as any)) {
+          if ((config.SUPPORTED_VIDEO_EXT as readonly string[]).includes(ext)) {
             files.push(item.name);
           }
         }
