@@ -100,6 +100,10 @@ client (Vue 3) for displaying the interface.
 │   ├── package.json          # Backend dependencies
 │   └── icon.png              # App icon
 │
+├── scripts/                  # Utility scripts
+│   ├── process-courses.js    # Course processing automation
+│   └── README.md             # Scripts documentation
+│
 ├── frontend/                 # Frontend app part (Vue 3 + Vite)
 │   ├── public/               # Static resources
 │   ├── src/                  # Sources (FSD Architecture)
@@ -178,3 +182,42 @@ client (Vue 3) for displaying the interface.
 - **`shared`**: Reusable infrastructure code.
   - **`api`**: Axios client.
   - **`lib`**: Formatting utilities.
+
+## Utilities
+
+### Course Processing Script
+
+**Location**: `scripts/process-courses.js`
+
+Автоматизированный инструмент для обработки вручную скачанных курсов в формат, совместимый с video-viewer (эмуляция yt-dlp):
+
+**Основные возможности:**
+
+- Сканирование структуры курсов (плоская или вложенная)
+- Слияние видео из вложенных папок в MKV с chapters
+- Генерация .info.json для плейлистов и видео
+- Извлечение обложек (thumbnails) через ffmpeg
+- Автоматическое удаление нумерации из названий
+- Идемпотентность (безопасно запускать многократно)
+- Детерминированные ID (SHA-256)
+
+**Использование:**
+
+```bash
+cd backend
+npm run process-courses -- /path/to/courses
+npm run process-courses -- ../sample --dry-run --verbose
+```
+
+**Технические детали:**
+
+- Использует MKV контейнер для поддержки всех кодеков (WebM/VP8/VP9/H.264/H.265)
+- Копирует потоки без перекодирования (`ffmpeg -c copy`)
+- Chapters с корректными абсолютными временными метками
+- Пропускает уже обработанные курсы и файлы
+- Доделывает частично обработанные курсы
+
+**Требования:**
+
+- ffmpeg и ffprobe в PATH
+- Node.js v14+

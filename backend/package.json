@@ -13,7 +13,8 @@
     "bundle": "cd ../frontend && npm run build && cd ../backend && npm run build && node build-installer.js",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "structure": "node utils/run-tree.js > STRUCTURE.md"
+    "structure": "node utils/run-tree.js > STRUCTURE.md",
+    "process-courses": "node ../scripts/process-courses.js"
   },
   "build": {
     "appId": "com.videoviewer.app",
