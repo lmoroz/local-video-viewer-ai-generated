@@ -2,19 +2,57 @@
 @import 'tailwindcss';
 
 :root {
-    color-scheme: dark;
     font-family: Roboto, Arial, sans-serif;
     --color-black: rgb(15, 15, 15);
     --title-bar-height: 0px;
+    margin: 0;
+    padding: 0;
+    min-height: 100dvh;
+    overflow: hidden;
+    background: linear-gradient(#0006, #0000 30% 70%, #0004) 50% 0% /  100% 60%,
+    linear-gradient(hsla(0deg 50% 50%/ 15%) 0 0) 50% 0 /   5vw 60%,
+    linear-gradient(hsla(30deg 50% 50%/ 15%) 0 0) 50% 0 /  15vw 60%,
+    linear-gradient(hsla(60deg 50% 50%/ 15%) 0 0) 50% 0 /  25vw 60%,
+    linear-gradient(hsla(90deg 50% 50%/ 15%) 0 0) 50% 0 /  35vw 60%,
+    linear-gradient(hsla(120deg 50% 50%/ 15%) 0 0) 50% 0 /  45vw 60%,
+    linear-gradient(hsla(150deg 50% 50%/ 15%) 0 0) 50% 0 /  55vw 60%,
+    linear-gradient(hsla(180deg 50% 50%/ 15%) 0 0) 50% 0 /  65vw 60%,
+    linear-gradient(hsla(210deg 50% 50%/ 15%) 0 0) 50% 0 /  75vw 60%,
+    linear-gradient(hsla(240deg 50% 50%/ 15%) 0 0) 50% 0 /  85vw 60%,
+    linear-gradient(hsla(270deg 50% 50%/ 15%) 0 0) 50% 0 /  95vw 60%,
+    linear-gradient(hsla(300deg 50% 50%/ 15%) 0 0) 50% 0 / 105vw 60%,
+    radial-gradient(100vw 50vw, #0004, #0000),
+    conic-gradient(from 170.5deg at 50% calc(60% - 14.8vw), hsla(0deg 50% 50%/ 15%) 19deg, #0000 0) 0 100% / 100vw 100%,
+    conic-gradient(from 153deg at 50% calc(60% - 14.8vw), hsla(30deg 50% 50%/ 15%) 54deg, #0000 0),
+    conic-gradient(from 140deg at 50% calc(60% - 14.8vw), hsla(60deg 50% 50%/ 15%) 80deg, #0000 0),
+    conic-gradient(from 130deg at 50% calc(60% - 14.8vw), hsla(90deg 50% 50%/ 15%) 100deg, #0000 0),
+    conic-gradient(from 123deg at 50% calc(60% - 14.8vw), hsla(120deg 50% 50%/ 15%) 114deg, #0000 0),
+    conic-gradient(from 118.5deg at 50% calc(60% - 14.8vw), hsla(150deg 50% 50%/ 15%) 123deg, #0000 0),
+    conic-gradient(from 114.5deg at 50% calc(60% - 14.8vw), hsla(180deg 50% 50%/ 15%) 131deg, #0000 0),
+    conic-gradient(from 111.5deg at 50% calc(60% - 14.8vw), hsla(210deg 50% 50%/ 15%) 137deg, #0000 0),
+    conic-gradient(from 109.2deg at 50% calc(60% - 14.8vw), hsla(240deg 50% 50%/ 15%) 141.6deg, #0000 0),
+    conic-gradient(from 107.3deg at 50% calc(60% - 14.8vw), hsla(270deg 50% 50%/ 15%) 145.3deg, #0000 0),
+    hsla(300deg 50% 50%/ 15%);
+    background-repeat: no-repeat;
 }
 
-html,
-#app {
+
+:root::after {
+    content: "";
+    position: absolute;
+    width: 35vw;
+    height: 4vw;
+    background: #0005;
+    filter: blur(3vw);
+    top: 60%;
+    left: 50%;
+    translate: -50% 600%;
+    border-radius: 100%;
+}
+
+#app, body {
     background: transparent;
-}
-
-body {
-    @apply bg-black text-gray-100;
+    height: 100vh;
 }
 
 body.is-electron {
@@ -22,6 +60,10 @@ body.is-electron {
     background: transparent;
 }
 
-body.is-electron #app {
-    padding-top: var(--title-bar-height);
+div.wrapper {
+    position: absolute;
+    overflow-y: scroll;
+    top: var(--title-bar-height);
+    height: calc(100dvh - var(--title-bar-height));
+    width: 100vw;
 }

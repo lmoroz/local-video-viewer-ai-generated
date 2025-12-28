@@ -1,5 +1,13 @@
 import { z } from 'zod';
 
+const ChapterSchema = z.object({
+  start_time: z.number(),
+  end_time: z.number(),
+  title: z.string(),
+});
+
+export type Chapter = z.infer<typeof ChapterSchema>;
+
 // Схема оптимизированных метаданных для кэша и UI
 export const MinifiedMetadataSchema = z.object({
   id: z.string().optional(),
@@ -11,6 +19,7 @@ export const MinifiedMetadataSchema = z.object({
   duration: z.number().optional(),
   uploader_url: z.string().optional(),
   channel_url: z.string().optional(),
+  chapters: z.array(ChapterSchema).optional(),
 });
 
 export type MinifiedMetadata = z.infer<typeof MinifiedMetadataSchema>;

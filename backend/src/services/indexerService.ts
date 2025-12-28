@@ -230,6 +230,7 @@ class IndexerService {
             description,
             thumbnail,
             path: path.join(playlistPath!, file),
+            chapters: metadata.chapters,
           };
         })
       );
@@ -269,7 +270,7 @@ class IndexerService {
 
       if (files.length > 0) {
         let playlistId: string | null | undefined = null;
-        const playlistName = path.basename(dir);
+        let playlistName = path.basename(dir);
 
         try {
           // Читаем просто имена файлов для поиска "000 - [ID]"
@@ -277,7 +278,15 @@ class IndexerService {
           const zeroFile = allFiles.find((f) => f.startsWith('000 - '));
           if (zeroFile) {
             const match = zeroFile.match(/\[([a-zA-Z0-9_-]+)]/);
-            if (match) playlistId = match[1];
+            if (match) {
+              playlistId = match[1];
+
+              const infoPath = path.join(dir, zeroFile);
+              if (await fs.pathExists(infoPath)) {
+                const metadata = await metadataCache.get(infoPath);
+                if (metadata) playlistName = metadata?.fulltitle || metadata?.title || playlistName;
+              }
+            }
           }
         } catch (_e) {
           /* empty */
@@ -325,6 +334,7 @@ class IndexerService {
               playlistId,
               playlistName,
               ctime,
+              chapters: metadata.chapters,
             });
           })
         );

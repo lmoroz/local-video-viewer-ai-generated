@@ -291,7 +291,7 @@
 
     if (tabParam && Object.values(TABS).includes(tabParam)) {
       currentTab.value = tabParam
-      
+
       if (tabParam === TABS.VIDEOS && savedPath) {
         await loadAllVideos(savedPath)
       } else if (tabParam === TABS.SEARCH && queryParam && savedPath) {
@@ -299,7 +299,7 @@
         await performSearch(queryParam, savedPath)
       }
     }
-    
+
     // Attempt scroll restoration after data load
     restoreScroll()
   })
@@ -318,7 +318,9 @@
 
 <template>
   <div class="min-h-screen px-4 py-3 md:px-8">
-    <div class="max-w-7xl mx-auto">
+    <div
+      class="mx-auto"
+      style="max-width: 90%">
       <!-- Header Area -->
       <div class="mb-6 flex flex-col md:flex-row gap-4 items-end">
         <div class="flex-grow w-full">
@@ -337,7 +339,7 @@
       <!-- Tabs & Controls -->
       <div
         v-if="currentPath"
-        class="sticky z-50 bg-gradient-to-r from-slate-900/50 via-gray-900/50 to-black/50 backdrop-blur-md backdrop-saturate-150 mb-6 border-b border-gray-700 flex flex-wrap items-end justify-between gap-4 pt-4 px-6 top-[var(--title-bar-height)]">
+        class="sticky z-50 bg-gradient-to-r from-slate-900/50 via-gray-900/50 to-black/50 backdrop-blur-md backdrop-saturate-150 mb-6 border-b border-gray-700 flex flex-wrap items-end justify-between gap-4 pt-4 px-6 top-0">
         <nav
           class="-mb-px flex space-x-8"
           aria-label="Tabs">
@@ -421,7 +423,7 @@
           </div>
           <div
             v-else
-            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
             <ListCard
               v-for="playlist in sortedPlaylists"
               :key="playlist.id"
@@ -450,7 +452,7 @@
               class="mb-8">
               <h2
                 v-if="group.title"
-                class="sticky top-[calc(var(--title-bar-height)_+_80px)] z-40 bg-black/80 backdrop-blur-md backdrop-saturate-150 py-2 px-6 text-xl font-bold text-white mb-4 flex items-center gap-2 border-b border-gray-800">
+                class="sticky top-[80px] z-40 bg-black/80 backdrop-blur-md backdrop-saturate-150 py-2 px-6 text-xl font-bold text-white mb-4 flex items-center gap-2 border-b border-gray-800">
                 <i
                   v-if="videoGroupOption === 'date'"
                   class="bi bi-calendar3 text-blue-500" />
@@ -492,7 +494,7 @@
               class="mb-8">
               <h2
                 v-if="group.title"
-                class="sticky top-[calc(var(--title-bar-height)_+_80px)] z-40 bg-black/80 backdrop-blur-md backdrop-saturate-150 py-2 px-6 rounded-xl text-xl font-bold text-white mb-4 flex items-center gap-2 border-b border-gray-800">
+                class="sticky top-[80px] z-40 bg-black/80 backdrop-blur-md backdrop-saturate-150 py-2 px-6 rounded-xl text-xl font-bold text-white mb-4 flex items-center gap-2 border-b border-gray-800">
                 <i
                   v-if="searchGroupOption === 'date'"
                   class="bi bi-calendar3 text-blue-500" />

@@ -47,7 +47,8 @@
     const activeId = String(props.currentVideoId)
     const el = itemRefs.value[activeId]
     if (el) {
-      el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      // TODO BUG ломает position: absolute
+      //el.scrollIntoView({ block: 'center', behavior: 'smooth' })
     }
   }
 
@@ -82,7 +83,11 @@
       <router-link
         v-for="video in videos"
         :key="video.originalIndex"
-        :ref="el => { if (el) itemRefs[String(video.id || video.filename)] = el.$el }"
+        :ref="
+          el => {
+            if (el) itemRefs[String(video.id || video.filename)] = el.$el
+          }
+        "
         :to="{
           name: 'Video',
           params: { videoId: video.id || video.filename, playlistId: playlistId },
@@ -111,7 +116,10 @@
         <div class="flex-1 min-w-0 flex flex-col justify-center">
           <div
             class="text-sm font-medium group-hover:text-blue-300 transition-colors"
-            :class="{ 'text-blue-400': String(video.id || video.filename) === String(currentVideoId), 'text-gray-200': String(video.id || video.filename) !== String(currentVideoId) }">
+            :class="{
+              'text-blue-400': String(video.id || video.filename) === String(currentVideoId),
+              'text-gray-200': String(video.id || video.filename) !== String(currentVideoId)
+            }">
             {{ video.title }}
           </div>
           <div class="text-xs text-gray-500 mt-1 flex items-center gap-2">

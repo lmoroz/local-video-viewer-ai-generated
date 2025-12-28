@@ -38,7 +38,7 @@
 
 <template>
   <div
-    class="sticky z-50 bg-gradient-to-r from-slate-900/50 via-gray-900/50 to-black/50 backdrop-blur-md backdrop-saturate-150 mb-6 border-b border-gray-700 flex flex-wrap items-center py-1 justify-between gap-4 px-6 top-[var(--title-bar-height)]">
+    class="sticky z-50 bg-gradient-to-r from-slate-900/50 via-gray-900/50 to-black/50 backdrop-blur-md backdrop-saturate-150 mb-6 border-b border-gray-700 flex flex-wrap items-center py-1 justify-between gap-4 px-6 top-0">
     <HomeButton />
     <div class="h-8 w-px bg-gray-700 mx-2" />
     <button

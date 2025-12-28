@@ -218,16 +218,16 @@
     @apply font-semibold text-white/90 text-lg leading-tight mb-1.5 line-clamp-2 transition-colors;
   }
 
-  .card:hover .card__title {
-    @apply text-blue-400;
-  }
-
   .card__subtitle {
-    @apply text-sm text-gray-400 mb-2 flex items-center gap-2 mt-auto truncate;
+    @apply p-1;
+    @apply text-sm text-white mb-2 flex items-center gap-2 mt-auto truncate;
+    @apply bg-gradient-to-r from-gray-800/40 via-gray-600/40 to-gray-500/40;
   }
 
   .meta-row {
-    @apply flex items-center gap-2 truncate;
+    @apply p-1 text-white/70 rounded-sm pr-2;
+    @apply inline-flex w-fit items-center gap-2 truncate;
+    @apply bg-gradient-to-r from-gray-800/40 via-gray-600/40 to-gray-500/40;
   }
 
   .tag-updated {

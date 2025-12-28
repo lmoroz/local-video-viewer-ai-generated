@@ -98,8 +98,6 @@
     }
   }
 
-
-
   const onSeek = time => {
     if (videoPlayerRef.value) {
       videoPlayerRef.value.seekTo(time)
@@ -110,7 +108,7 @@
 </script>
 
 <template>
-  <div class="min-h-screen text-white">
+  <div class="text-white">
     <StickyHeader
       :to="{
         name: 'Playlist',

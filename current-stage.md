@@ -43,13 +43,24 @@ A YouTube clone for viewing local video files. The application consists of a bac
 - View search results (integrated into the main page).
 - View a list of videos in a playlist (with **fixed** auto-scrolling to the current video and a counter).
 - Viewing videos (Video.js).
-- Support for chapters.
+- **Full chapters support**:
+    - Chapters are extracted from `*.info.json` files and cached.
+    - Interactive chapters sidebar with seek functionality.
+    - Current chapter name displayed in video player controls.
+    - Chapter markers on video timeline.
+- **Smart playlist naming**: Extracts playlist titles from `000 - *.info.json` metadata in `scanAllVideos`.
 - ID-based routing.
 - Global “Home” button.
 - Dark theme with **Glassmorphism effects** in the header.
 - Video viewing progress (Local Storage) displayed on video cards.
 - **Improved 'Back' button behavior**: Mimics browser history navigation (window.history) with fallback logic.
 - **Smart Scroll Restoration**: Remembers scroll position on the Home page when navigating away and restores it upon return.
+- **UI/UX Improvements**:
+    - Removed fixed `--title-bar-height` CSS variable (switched to `top: 0`).
+    - Wider max-width container (90% instead of 7xl) on the home page.
+    - Added 5-column layout support for 2XL screens.
+    - Polished card styles (gradient badges for meta information).
+    - Minor formatting and whitespace cleanup.
 
 ## Project Structure
 

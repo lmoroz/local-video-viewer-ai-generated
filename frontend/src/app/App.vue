@@ -9,23 +9,23 @@
   onBeforeUnmount(() => document.removeEventListener('auxclick', useMuddleClickHandler))
 
   onMounted(() => {
-    if (isElectron) {
-      document.body.classList.add('is-electron')
-    }
+    if (isElectron) document.body.classList.add('is-electron')
   })
 </script>
 
 <template>
   <WindowTitleBar v-if="isElectron" />
-  <router-view v-slot="{ Component }">
-    <transition
-      @enter="fadeIn"
-      @leave="fadeOut"
-      v-bind:css="false"
-      mode="out-in">
-      <keep-alive include="HomePage">
-        <component :is="Component" />
-      </keep-alive>
-    </transition>
-  </router-view>
+  <div class="wrapper">
+    <router-view v-slot="{ Component }">
+      <transition
+        @enter="fadeIn"
+        @leave="fadeOut"
+        v-bind:css="false"
+        mode="out-in">
+        <keep-alive include="HomePage">
+          <component :is="Component" />
+        </keep-alive>
+      </transition>
+    </router-view>
+  </div>
 </template>
