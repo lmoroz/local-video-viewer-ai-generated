@@ -498,11 +498,28 @@ async function processCourse(courseDir) {
     log(`Обработка видео: ${video.name}`, 'verbose');
     
     // Переименовываем видео с нумерацией (если ещё не переименовано)
+    let actualPath = video.path;
     if (!CONFIG.dryRun && video.path !== newPath && !isRenamed) {
       await fs.rename(video.path, newPath);
+      actualPath = newPath;
+    } else if (isRenamed) {
+      actualPath = newPath;
     }
     
-    const actualPath = isRenamed ? newPath : video.path;
+    // Переименовываем .description файл, если он существует
+    const oldDescriptionPath = video.path.replace(path.extname(video.path), '.description');
+    const newDescriptionFilename = `${String(videoIndex).padStart(3, '0')} - ${cleanBasename} [${videoId}].description`;
+    const newDescriptionPath = path.join(courseDir, newDescriptionFilename);
+    
+    if (fsSync.existsSync(oldDescriptionPath) && oldDescriptionPath !== newDescriptionPath) {
+      if (!CONFIG.dryRun) {
+        await fs.rename(oldDescriptionPath, newDescriptionPath);
+        log(`Переименован .description: ${path.basename(newDescriptionFilename)}`, 'verbose');
+      } else {
+        log(`[DRY-RUN] Переименование .description: ${path.basename(newDescriptionFilename)}`, 'verbose');
+      }
+    }
+    
     const duration = getVideoDuration(actualPath);
 
     // Создаём .info.json (если ещё не создан)
