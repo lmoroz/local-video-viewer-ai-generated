@@ -96,8 +96,8 @@ class IndexerService {
           let uploader = 'Unknown';
           let coverPath: string | null = null;
           let totalDuration = 0;
-          const durations: any[] = [];
-          const vInfos: any[] = [];
+          const durations: Array<number | undefined> = [];
+          const vInfos: Array<Record<string, MinifiedMetadata>> = [];
 
           const infoFile = files.find((f) => f.startsWith('000 - ') && f.endsWith('.info.json'));
           if (infoFile) {

@@ -1,4 +1,4 @@
-# Текущее состояние проекта
+# Current Project State
 
 ## Project essence
 
@@ -196,19 +196,19 @@ client (Vue 3) for displaying the interface.
 
 **Location**: `scripts/process-courses.js`
 
-Автоматизированный инструмент для обработки вручную скачанных курсов в формат, совместимый с video-viewer (эмуляция yt-dlp):
+Automated tool for processing manually downloaded courses into a format compatible with video-viewer (yt-dlp emulation):
 
-**Основные возможности:**
+**Key Features:**
 
-- Сканирование структуры курсов (плоская или вложенная)
-- Слияние видео из вложенных папок в MKV с chapters
-- Генерация .info.json для плейлистов и видео
-- Извлечение обложек (thumbnails) через ffmpeg
-- Автоматическое удаление нумерации из названий
-- Идемпотентность (безопасно запускать многократно)
-- Детерминированные ID (SHA-256)
+- Scanning course structure (flat or nested)
+- Merging videos from nested folders into MKV with chapters
+- Generating .info.json for playlists and videos
+- Extracting thumbnails via ffmpeg
+- Automatic removal of numbering from titles
+- Idempotency (safe to run multiple times)
+- Deterministic IDs (SHA-256)
 
-**Использование:**
+**Usage:**
 
 ```bash
 cd backend
@@ -216,15 +216,15 @@ npm run process-courses -- /path/to/courses
 npm run process-courses -- ../sample --dry-run --verbose
 ```
 
-**Технические детали:**
+**Technical Details:**
 
-- Использует MKV контейнер для поддержки всех кодеков (WebM/VP8/VP9/H.264/H.265)
-- Копирует потоки без перекодирования (`ffmpeg -c copy`)
-- Chapters с корректными абсолютными временными метками
-- Пропускает уже обработанные курсы и файлы
-- Доделывает частично обработанные курсы
+- Uses MKV container for support of all codecs (WebM/VP8/VP9/H.264/H.265)
+- Copies streams without re-encoding (`ffmpeg -c copy`)
+- Chapters with correct absolute timestamps
+- Skips already processed courses and files
+- Completes partially processed courses
 
-**Требования:**
+**Requirements:**
 
-- ffmpeg и ffprobe в PATH
+- ffmpeg and ffprobe in PATH
 - Node.js v14+

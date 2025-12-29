@@ -2,45 +2,41 @@
 
 > **🤖 AI-Assisted Development Project**
 >
-> Этот проект является демонстрацией современного подхода к разработке
-> программного обеспечения с использованием LLM-агентов (Large Language Model)
-> в качестве интеллектуального AI-ассистента. Разработка ведётся в режиме
-> **human-in-the-loop**: я определяю архитектуру, принимаю ключевые решения и
-> контролирую качество кода, а AI-агент выступает в роли мощного инструмента
-> для ускорения рутинных задач и генерации шаблонного кода.
+> This project demonstrates a modern approach to software development using
+> LLM agents (Large Language Models) as intelligent AI assistants. Development
+> follows a **human-in-the-loop** model: I define the architecture, make key
+> decisions, and control code quality, while the AI agent serves as a powerful
+> tool for accelerating routine tasks and generating boilerplate code.
 
-## 🎯 Философия разработки
+## 🎯 Development Philosophy
 
-### Что делаю я (разработчик)
+### What I do (Developer)
 
-- 🏗️ **Архитектурные решения**: выбор технологического стека, проектирование
-  модульной структуры приложения (Feature-Sliced Design)
-- 🎨 **UX/UI дизайн**: концепция интерфейса, пользовательские сценарии,
-  визуальная стилистика
-- 🔍 **Code Review**: проверка сгенерированного кода, рефакторинг, оптимизация
-- 🧪 **Тестирование**: верификация функциональности, отладка edge cases
-- 📋 **Управление проектом**: планирование фичей, приоритизация задач,
-  ведение документации
+- 🏗️ **Architectural Decisions**: choosing the technology stack, designing
+  modular application structure (Feature-Sliced Design)
+- 🎨 **UX/UI Design**: interface concept, user scenarios, visual aesthetics
+- 🔍 **Code Review**: reviewing generated code, refactoring, optimization
+- 🧪 **Testing**: functionality verification, debugging edge cases
+- 📋 **Project Management**: feature planning, task prioritization,
+  documentation maintenance
 
-### Что делает AI-агент
+### What the AI Agent does
 
-- ⚡ **Генерация кода**: создание компонентов, сервисов, схем валидации
-  по техническим спецификациям
-- 🔧 **Рефакторинг**: автоматическое исправление линтера, оптимизация импортов,
-  унификация стилей кода
-- 📝 **Документация**: генерация комментариев, README, технических описаний
-- 🐛 **Отладка**: анализ ошибок, предложение решений, исправление типизации
-- 🔄 **Миграции**: обновление зависимостей, адаптация кода под новые версии
-  библиотек
+- ⚡ **Code Generation**: creating components, services, validation schemas
+  based on technical specifications
+- 🔧 **Refactoring**: automatic linter fixes, import optimization,
+  code style unification
+- 📝 **Documentation**: generating comments, READMEs, technical descriptions
+- 🐛 **Debugging**: error analysis, solution suggestions, type fixing
+- 🔄 **Migrations**: dependency updates, adapting code to new library versions
 
-## 🚀 Преимущества AI-Driven подхода
+## 🚀 Benefits of the AI-Driven Approach
 
-✅ **Скорость разработки**: рутинные задачи решаются в 5-10 раз быстрее  
-✅ **Консистентность кода**: единообразный стиль во всём проекте  
-✅ **Актуальные best practices**: использование современных паттернов и
-подходов  
-✅ **Документирование**: автоматическая синхронизация кода и документации  
-✅ **Покрытие edge cases**: AI помогает выявить потенциальные проблемы
+✅ **Development Speed**: routine tasks are solved 5-10x faster  
+✅ **Code Consistency**: uniform style throughout the entire project  
+✅ **Current Best Practices**: using modern patterns and approaches  
+✅ **Documentation**: automatic synchronization of code and documentation  
+✅ **Edge Case Coverage**: AI helps identify potential issues
 
 ---
 
