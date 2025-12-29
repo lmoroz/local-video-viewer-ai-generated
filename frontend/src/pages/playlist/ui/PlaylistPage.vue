@@ -15,6 +15,7 @@
   const playlistTitle = ref('')
   const loading = ref(true)
   const error = ref(null)
+  const clearingCache = ref(false)
   const sortBy = ref('default') // default, date_asc, date_desc, title_asc, title_desc
 
   // Load sort order
@@ -84,6 +85,33 @@
     next()
   })
 
+  const handleClearCache = async () => {
+    if (clearingCache.value) return
+
+    try {
+      clearingCache.value = true
+      await api.clearPlaylistCache(props.id, props.dir)
+
+      // Перезагружаем данные плейлиста с cache-busting параметром
+      loading.value = true
+      const response = await api.getPlaylistDetails(props.id, props.dir, Date.now())
+
+      videos.value = response.data.videos.map((v, i) => {
+        return {
+          ...v,
+          originalIndex: i
+        }
+      })
+      playlistTitle.value = response.data.title || props.id
+      document.title = playlistTitle.value
+    } catch (err) {
+      console.error('Failed to clear cache:', err)
+      error.value = 'Failed to clear cache'
+    } finally {
+      clearingCache.value = false
+      loading.value = false
+    }
+  }
 
 </script>
 
@@ -210,6 +238,21 @@
           </div>
         </div>
       </div>
+
+      <!-- Clear Cache Button (Fixed Bottom Right) -->
+      <button
+        v-if="!loading && !error"
+        @click="handleClearCache"
+        :disabled="clearingCache"
+        :title="clearingCache ? 'Clearing cache...' : 'Clear playlist cache'"
+        class="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center z-50">
+        <i
+          v-if="!clearingCache"
+          class="bi bi-arrow-clockwise text-xl" />
+        <div
+          v-else
+          class="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
+      </button>
     </div>
   </div>
 </template>

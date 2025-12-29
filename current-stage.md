@@ -73,12 +73,19 @@ client (Vue 3) for displaying the interface.
   - Added 5-column layout support for 2XL screens.
   - Polished card styles (gradient badges for meta information).
   - Minor formatting and whitespace cleanup.
+- **Playlist Cache Management**:
+  - Added "Clear Cache" button on playlist pages (floating button, bottom-right).
+  - Clears cached metadata for a specific playlist and all its videos.
+  - Automatically reloads playlist data after cache clearing.
+  - Cache-busting mechanism to prevent browser HTTP caching (304 Not Modified).
+  - Visual feedback with loading indicator during cache operations.
 
 ## Project Structure
 
 ### File Tree
 
 ```text
+
 .
 ├── backend/                  # Backend app part (Node.js + Electron)
 │   ├── cache/                # File cache folder

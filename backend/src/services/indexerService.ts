@@ -96,6 +96,8 @@ class IndexerService {
           let uploader = 'Unknown';
           let coverPath: string | null = null;
           let totalDuration = 0;
+          const durations: any[] = [];
+          const vInfos: any[] = [];
 
           const infoFile = files.find((f) => f.startsWith('000 - ') && f.endsWith('.info.json'));
           if (infoFile) {
@@ -130,10 +132,14 @@ class IndexerService {
               this.limit(async () => {
                 const vBase = path.basename(vFile, path.extname(vFile));
                 const vInfo = vBase + '.info.json';
+                let vData: MinifiedMetadata = {};
                 if (files.includes(vInfo)) {
-                  const vData = await metadataCache.get(path.join(itemPath, vInfo));
+                  vData = await metadataCache.get(path.join(itemPath, vInfo));
                   if (vData.duration) totalDuration += vData.duration;
+                  durations.push(vData.duration);
                 }
+                const key: string = `${vInfo}: ${files.includes(vInfo)}`;
+                vInfos.push({ [key]: vData });
               })
             )
           );
@@ -145,6 +151,8 @@ class IndexerService {
             cover: coverPath,
             videoCount,
             totalDuration,
+            vInfos,
+            durations,
             uploader,
             updatedAt: stat.mtimeMs,
           };
@@ -357,8 +365,41 @@ class IndexerService {
     return results;
   }
 
+  /**
+   * Находит путь к директории плейлиста по его ID
+   */
+  public async findPlaylistPath(dirPath: string, playlistId: string): Promise<string | null> {
+    const items = await fs.readdir(dirPath);
+
+    for (const item of items) {
+      const p = path.join(dirPath, item);
+      try {
+        const stat = await fs.stat(p);
+        if (stat.isDirectory()) {
+          const f = await fs.readdir(p);
+          const zero = f.find((name) => name.startsWith('000 - '));
+          if (zero && zero.includes(`[${playlistId}]`)) {
+            return p;
+          }
+        }
+      } catch (_e) {
+        /* ignore access errors */
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Очищает кеш для всех файлов в указанной директории плейлиста
+   */
+  public async clearPlaylistCache(playlistPath: string): Promise<number> {
+    return metadataCache.clearByPrefix(playlistPath);
+  }
+
   private _extractIdFromFilename(filename: string): string | undefined {
     const match = filename.match(/\[([a-zA-Z0-9_-]+)]/);
+
     return match ? match[1] : undefined;
   }
 }

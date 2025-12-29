@@ -6,8 +6,10 @@ const router = Router();
 // Playlists
 router.get('/playlists', controller.getPlaylists);
 router.get('/playlist/:id', controller.getPlaylistDetails);
+router.delete('/playlist/:id/cache', controller.clearPlaylistCache);
 
 // Videos & Search
+
 router.get('/videos', controller.getAllVideos);
 router.get('/search', controller.search);
 

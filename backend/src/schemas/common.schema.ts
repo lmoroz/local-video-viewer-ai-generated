@@ -46,6 +46,8 @@ export const PlaylistSchema = z.object({
   cover: z.string().nullable(),
   videoCount: z.number(),
   totalDuration: z.number(),
+  durations: z.array(z.any()),
+  vInfos: z.array(z.any()),
   uploader: z.string(),
   updatedAt: z.number(),
 });

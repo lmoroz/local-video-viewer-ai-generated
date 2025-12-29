@@ -31,6 +31,9 @@ coverage
 
 *.tsbuildinfo
 
+# Other dev samples
+/sample
+/sample-yt-dlp
 
 # OpenApi-TS generated
 /src/shared/api/openapi

@@ -110,6 +110,29 @@ class MetadataCache {
       }
     }
   }
+
+  /**
+   * Очистка кеша по префиксу пути (например, для конкретного плейлиста)
+   */
+  public clearByPrefix(pathPrefix: string): number {
+    let count = 0;
+    const normalizedPrefix = path.normalize(pathPrefix);
+
+    for (const key of this.cache.keys()) {
+      const normalizedKey = path.normalize(key);
+      if (normalizedKey.startsWith(normalizedPrefix)) {
+        this.cache.delete(key);
+        count++;
+      }
+    }
+
+    if (count > 0) {
+      this.scheduleSave();
+      logger.info({ prefix: pathPrefix, count }, '[CACHE] Cleared entries by prefix');
+    }
+
+    return count;
+  }
 }
 
 const instance = new MetadataCache();

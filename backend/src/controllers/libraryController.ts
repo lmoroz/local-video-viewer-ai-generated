@@ -108,3 +108,30 @@ export const search = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const clearPlaylistCache = async (req: Request, res: Response) => {
+  const validation = ScanQuerySchema.safeParse(req.query);
+  const { id } = req.params;
+
+  if (!validation.success) {
+    return res.status(400).json({ error: validation.error.issues[0].message });
+  }
+
+  const { dir } = validation.data;
+
+  try {
+    const playlistPath = await indexer.findPlaylistPath(dir, id);
+
+    if (!playlistPath) {
+      return res.status(404).json({ error: 'Playlist not found' });
+    }
+
+    const clearedCount = await indexer.clearPlaylistCache(playlistPath);
+
+    logger.info({ playlistId: id, clearedCount }, 'Playlist cache cleared');
+    res.json({ success: true, clearedCount });
+  } catch (err) {
+    logger.error({ err, playlistId: id }, 'Failed to clear playlist cache');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
